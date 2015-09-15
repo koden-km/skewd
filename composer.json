@@ -1,0 +1,31 @@
+{
+    "name": "skewd/server",
+    "description": "This package needs a description!",
+    "keywords": [],
+    "homepage": "https://github.com/skewd/server",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "James Harris",
+            "email": "james.harris@icecave.com.au",
+            "homepage": "https://github.com/jmalloc"
+        }
+    ],
+    "require": {
+        "php": ">=5.5",
+        "icecave/isolator": "~2"
+    },
+    "require-dev": {
+        "icecave/archer": "~1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Skewd\\Server\\": "src"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-develop": "0.1.x-dev"
+        }
+    }
+}
