@@ -5,53 +5,31 @@ require __DIR__ . '/../vendor/autoload.php';
 Eloquent\Asplode\Asplode::install();
 
 use Icecave\Stump\Logger;
+use PhpAmqpLib\Channel\AMQPChannel;
 use Skewd\Server\ModularServer;
 use Skewd\Server\Module;
 use Skewd\Server\Server;
+use Skewd\Server\ServerProcess;
 
 class MyModule implements Module
 {
-    /**
-     * Get the name of the module.
-     *
-     * @return string
-     */
     public function name()
     {
         return 'my-module';
     }
 
-    /**
-     * Initialize the module.
-     *
-     * This method is invoked when a server starts (or restarts).
-     *
-     * @param Server $server The server under which the module is running.
-     */
-    public function initialize(Server $server)
+    public function initialize(Server $server/*, AMQPChannel $channel*/)
     {
         if (rand(0, 1))
             throw new \Exception('OH SHIT!');
     }
 
-    /**
-     * Shutdown the module.
-     *
-     * This method is invoked when a server stops (or restarts).
-     *
-     * A module may be shutdown even if it has not previously been initialized.
-     */
     public function shutdown()
     {
-        // if (rand(0, 1))
-        throw new \Exception('OH SHIT!');
+        if (rand(0, 1))
+            throw new \Exception('OH SHIT!');
     }
 
-    /**
-     * Perform the module's action.
-     *
-     * This method is invoked repeatedly while the server is running.
-     */
     public function tick()
     {
         echo '.';
@@ -61,6 +39,9 @@ class MyModule implements Module
     }
 }
 
-$server = new ModularServer(new Logger);
-$server->modules()->add(new MyModule);
-$server->start();
+$logger = new Logger;
+$server = new ModularServer($logger);
+$server->add(new MyModule);
+
+$process = new ServerProcess($server, $logger);
+$process->start();

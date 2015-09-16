@@ -1,15 +1,19 @@
 <?php
-namespace Skewd\Server;
+namespace Skewd\Application;
 
 use Exception;
 use Psr\Log\LoggerInterface;
+use Skewd\Process\Process;
 use SplObjectStorage;
 
 /**
- * A collection of modules used by a modular server.
+ * A modular application centered around a single AMQP connection.
  */
-final class OrderedModuleCollection implements ModuleCollection
+final class ModularApplication implements Application
 {
+    /**
+     * @param LoggerInterface $logger The logger to use for application output.
+     */
     public function __construct(LoggerInterface $logger)
     {
         $this->logger = $logger;
@@ -19,7 +23,7 @@ final class OrderedModuleCollection implements ModuleCollection
     /**
      * Add a module to the collection.
      *
-     * @param Module $module
+     * @param Module $module The module to add.
      */
     public function add(Module $module)
     {
@@ -29,7 +33,7 @@ final class OrderedModuleCollection implements ModuleCollection
     /**
      * Remove a module from the collection.
      *
-     * @param Module $module
+     * @param Module $module The module to remove.
      */
     public function remove(Module $module)
     {
@@ -37,11 +41,11 @@ final class OrderedModuleCollection implements ModuleCollection
     }
 
     /**
-     * Check if a module is present in this collection.
+     * Check if a module has been added.
      *
-     * @param Module $module
+     * @param Module $module The module to check.
      *
-     * @return boolean
+     * @return boolean True if the module has been added; otherwise, false.
      */
     public function has(Module $module)
     {
@@ -57,20 +61,20 @@ final class OrderedModuleCollection implements ModuleCollection
     }
 
     /**
-     * Initialize all modules in the collection.
+     * Initialize the application.
      *
-     * @param Server $server The server under which the module is running.
+     * @param Process $process The process that the application is running on.
      *
-     * @return boolean True if all modules initialized successfully; otherwise, false.
+     * @return boolean True if the process initialized successfully; otherwise, false.
      */
-    public function initialize(Server $server)
+    public function initialize(Process $process)
     {
         foreach ($this->modules as $module) {
             try {
-                $module->initialize($server);
+                $module->initialize($this);
             } catch (Exception $e) {
                 $this->logger->critical(
-                    'Failed to initialize server module "{name}": {message}',
+                    'Failed to initialize module "{name}": {message}',
                     [
                         'name' => $module->name(),
                         'message' => $e->getMessage(),
@@ -86,7 +90,7 @@ final class OrderedModuleCollection implements ModuleCollection
     }
 
     /**
-     * Shut down all modules in the collection.
+     * Shut down the application.
      *
      * @return boolean True if all modules shut down successfully; otherwise, false.
      */
@@ -99,7 +103,7 @@ final class OrderedModuleCollection implements ModuleCollection
                 $module->shutdown();
             } catch (Exception $e) {
                 $this->logger->warning(
-                    'Failed to shut down server module "{name}": {message}',
+                    'Failed to shut down module "{name}": {message}',
                     [
                         'name' => $module->name(),
                         'message' => $e->getMessage(),
@@ -115,7 +119,7 @@ final class OrderedModuleCollection implements ModuleCollection
     }
 
     /**
-     * Perform all module's actions.
+     * Perform each module's action.
      *
      * @return boolean True if all modules ticked successfully; otherwise, false.
      */
@@ -126,7 +130,7 @@ final class OrderedModuleCollection implements ModuleCollection
                 $module->tick();
             } catch (Exception $e) {
                 $this->logger->critical(
-                    'Failure in server module "{name}": {message}',
+                    'Failure in module "{name}": {message}',
                     [
                         'name' => $module->name(),
                         'message' => $e->getMessage(),

@@ -1,9 +1,12 @@
 <?php
-namespace Skewd\Server;
+namespace Skewd\Process;
 
 use Eloquent\Enumeration\AbstractEnumeration;
 
-class ServerStatus extends AbstractEnumeration
+/**
+ * @access private
+ */
+final class TickingProcessStatus extends AbstractEnumeration
 {
     const STARTING   = 'starting';
     const RUNNING    = 'running';

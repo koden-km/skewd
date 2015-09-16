@@ -1,15 +1,18 @@
 <?php
-namespace Skewd\Server;
+namespace Skewd\Application;
+
+use PhpAmqpLib\Channel\AMQPChannel;
 
 /**
- * A module provides functionality to a server.
+ * A module provides functionality to an modular application.
  */
 interface Module
 {
     /**
      * Get the name of the module.
      *
-     * The name is used used to identify the module and SHOULD be unique.
+     * The name is a label only, the name SHOULD NOT be used as an identifier
+     * for the module.
      *
      * @return string The module name.
      */
@@ -25,11 +28,12 @@ interface Module
      * The module MUST allow repeat calls to tick() once initialize() has
      * completed successfully.
      *
-     * @param Server $server The server under which the module is running.
+     * @param Application $application The application under which the module is executing.
+     * @param AMQPChannel $channel     A private AMQP channel for use by this module.
      *
      * @throws Exception if the module can not be initialized.
      */
-    public function initialize(Server $server);
+    public function initialize(Application $application/*, AMQPChannel $channel*/);
 
     /**
      * Shutdown the module.
@@ -49,11 +53,12 @@ interface Module
     /**
      * Perform the module's action.
      *
-     * This method is called repeatedly while the module is running under a
-     * server. Hence, the module MUST allow repeat calls to tick() once
-     * initialize() has completed successfully.
+     * This method is called repeatedly while the module is executing. Hence,
+     * the module MUST allow repeat calls to tick() once initialize() has
+     * completed successfully.
      *
-     * The module MAY throw an exception if initialization has not succeeded.
+     * The module MAY throw an exception if initialization has not been
+     * performed.
      *
      * The module MAY throw an exception if the module is in a critical state,
      * such as an unrecoverable error that requires re-initialization.

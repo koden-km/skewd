@@ -1,22 +1,23 @@
 <?php
-namespace Skewd\Server;
+namespace Skewd\Application;
 
 use Eloquent\Phony\Phpunit\Phony;
 use Exception;
 use PHPUnit_Framework_TestCase;
 use Psr\Log\LoggerInterface;
+use Skewd\Process\Process;
 
-class OrderedModuleCollectionTest extends PHPUnit_Framework_TestCase
+class ModularApplicationTest extends PHPUnit_Framework_TestCase
 {
     public function setUp()
     {
         $this->logger = Phony::fullMock(LoggerInterface::class);
 
-        $this->subject = new OrderedModuleCollection(
+        $this->subject = new ModularApplication(
             $this->logger->mock()
         );
 
-        $this->server = Phony::fullMock(Server::class);
+        $this->process = Phony::fullMock(Process::class);
 
         $this->module1 = Phony::fullMock(Module::class);
         $this->module1->name->returns('<module 1>');
@@ -89,10 +90,10 @@ class OrderedModuleCollectionTest extends PHPUnit_Framework_TestCase
         $this->subject->add($this->module1->mock());
         $this->subject->add($this->module2->mock());
 
-        $result = $this->subject->initialize($this->server->mock());
+        $result = $this->subject->initialize($this->process->mock());
 
-        $this->module1->initialize->calledWith($this->server->mock());
-        $this->module2->initialize->calledWith($this->server->mock());
+        $this->module1->initialize->calledWith($this->subject);
+        $this->module2->initialize->calledWith($this->subject);
 
         $this->assertTrue($result);
     }
@@ -106,14 +107,14 @@ class OrderedModuleCollectionTest extends PHPUnit_Framework_TestCase
         $this->subject->add($this->module2->mock());
         $this->subject->add($this->module3->mock());
 
-        $result = $this->subject->initialize($this->server->mock());
+        $result = $this->subject->initialize($this->process->mock());
 
-        $this->module1->initialize->calledWith($this->server->mock());
-        $this->module2->initialize->calledWith($this->server->mock());
+        $this->module1->initialize->calledWith($this->subject);
+        $this->module2->initialize->calledWith($this->subject);
         $this->module3->initialize->never()->called();
 
         $this->logger->critical->calledWith(
-            'Failed to initialize server module "{name}": {message}',
+            'Failed to initialize module "{name}": {message}',
             [
                 'name' => '<module 2>',
                 'message' => 'Failed!',
@@ -153,7 +154,7 @@ class OrderedModuleCollectionTest extends PHPUnit_Framework_TestCase
         $this->module3->shutdown->called();
 
         $this->logger->warning->calledWith(
-            'Failed to shut down server module "{name}": {message}',
+            'Failed to shut down module "{name}": {message}',
             [
                 'name' => '<module 2>',
                 'message' => 'Failed!',
@@ -193,7 +194,7 @@ class OrderedModuleCollectionTest extends PHPUnit_Framework_TestCase
         $this->module3->tick->never()->called();
 
         $this->logger->critical->calledWith(
-            'Failure in server module "{name}": {message}',
+            'Failure in module "{name}": {message}',
             [
                 'name' => '<module 2>',
                 'message' => 'Failed!',
