@@ -4,6 +4,8 @@ namespace Skewd\Application;
 use ErrorException;
 use Exception;
 use LogicException;
+use PhpAmqpLib\Channel\AMQPChannel;
+use PhpAmqpLib\Exception\AMQPTimeoutException;
 use Psr\Log\LoggerInterface;
 use Skewd\Amqp\ConnectionFactory;
 use Skewd\Process\Process;
@@ -174,16 +176,10 @@ final class ModularApplication implements Application
         }
 
         try {
-            $this->connection->select(0, self::SELECT_TIMEOUT * 1000000);
-        } catch (Exception $e) {
-            // select was interrupted by signal ...
-            if (
-                $e instanceof ErrorException
-                && false !== strpos($e->getMessage(), 'Interrupted system call')
-            ) {
+            if ($this->select()) {
                 return true;
             }
-
+        } catch (Exception $e) {
             $this->logger->critical(
                 'Failure while waiting for AMQP connection: {message}',
                 [
@@ -197,13 +193,8 @@ final class ModularApplication implements Application
 
         foreach ($this->modules as $module) {
             try {
+                $this->wait($this->modules[$module]);
                 $module->tick();
-
-                $this->modules[$module]->wait(
-                    null, // allowed methods
-                    true, // non-blocking
-                    0     // timeout
-                );
             } catch (Exception $e) {
                 $this->logger->critical(
                     'Failure in module "{name}": {message}',
@@ -221,7 +212,37 @@ final class ModularApplication implements Application
         return true;
     }
 
+    /**
+     * Perform an IO select() on the AMQP connection.
+     *
+     * @return boolean True if the select was interrupted by a system call.
+     */
+    private function select()
+    {
+        try {
+            $this->connection->select(0, self::SELECT_TIMEOUT * 1000000);
+        } catch (ErrorException $e) {
+            return false !== strpos($e->getMessage(), 'Interrupted system call');
+        }
+
+        return false;
+    }
+
+    private function wait(AMQPChannel $channel)
+    {
+        try {
+            $channel->wait(
+                null, // allowed methods
+                true, // non-blocking
+                self::CHANNEL_WAIT_TIMEOUT // timeout
+            );
+        } catch (AMQPTimeoutException $e) {
+            // ignore ...
+        }
+    }
+
     const SELECT_TIMEOUT = 0.01;
+    const CHANNEL_WAIT_TIMEOUT = 0.000001; // must be greater than zero otherwise amqplib does nothing
 
     private $connectionFactory;
     private $connection;

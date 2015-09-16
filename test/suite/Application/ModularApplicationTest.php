@@ -279,14 +279,10 @@ class ModularApplicationTest extends PHPUnit_Framework_TestCase
         Phony::inOrder(
             $this->connection->select->calledWith(0, 10000),
             Phony::anyOrder(
-                Phony::inOrder(
-                    $this->module1->tick->called(),
-                    $this->channel1->wait->calledWith(null, true, 0)
-                ),
-                Phony::inOrder(
-                    $this->module2->tick->called(),
-                    $this->channel2->wait->calledWith(null, true, 0)
-                )
+                $this->module1->tick->called(),
+                $this->module2->tick->called(),
+                $this->channel1->wait->calledWith(null, true, 0.000001),
+                $this->channel2->wait->calledWith(null, true, 0.000001)
             )
         );
 
