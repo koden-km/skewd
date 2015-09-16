@@ -33,7 +33,7 @@ interface Module
      *
      * @throws Exception if the module can not be initialized.
      */
-    public function initialize(Application $application/*, AMQPChannel $channel*/);
+    public function initialize(Application $application, AMQPChannel $channel);
 
     /**
      * Shutdown the module.

@@ -4,18 +4,37 @@ namespace Skewd\Application;
 use Eloquent\Phony\Phpunit\Phony;
 use Exception;
 use PHPUnit_Framework_TestCase;
+use PhpAmqpLib\Channel\AMQPChannel;
+use PhpAmqpLib\Connection\AMQPStreamConnection;
 use Psr\Log\LoggerInterface;
+use Skewd\Amqp\ConnectionFactory;
 use Skewd\Process\Process;
 
 class ModularApplicationTest extends PHPUnit_Framework_TestCase
 {
     public function setUp()
     {
+        $this->connectionFactory = Phony::fullMock(ConnectionFactory::class);
         $this->logger = Phony::fullMock(LoggerInterface::class);
 
         $this->subject = new ModularApplication(
+            $this->connectionFactory->mock(),
             $this->logger->mock()
         );
+
+        $this->channel1 = Phony::fullMock(AMQPChannel::class);
+        $this->channel2 = Phony::fullMock(AMQPChannel::class);
+        $this->channel3 = Phony::fullMock(AMQPChannel::class);
+
+        $this->connection = Phony::fullMock(AMQPStreamConnection::class);
+        $this->connection->isConnected->returns(true);
+        $this->connection->channel->returns(
+            $this->channel1->mock(),
+            $this->channel2->mock(),
+            $this->channel3->mock()
+        );
+
+        $this->connectionFactory->create->returns($this->connection->mock());
 
         $this->process = Phony::fullMock(Process::class);
 
@@ -92,13 +111,42 @@ class ModularApplicationTest extends PHPUnit_Framework_TestCase
 
         $result = $this->subject->initialize($this->process->mock());
 
-        $this->module1->initialize->calledWith($this->subject);
-        $this->module2->initialize->calledWith($this->subject);
+        Phony::inOrder(
+            $this->connectionFactory->create->called(),
+            Phony::anyOrder(
+                $this->module1->initialize->calledWith(
+                    $this->subject,
+                    $this->channel1->mock()
+                ),
+                $this->module2->initialize->calledWith(
+                    $this->subject,
+                    $this->channel2->mock()
+                )
+            )
+        );
 
         $this->assertTrue($result);
     }
 
-    public function testInitializeWithFailure()
+    public function testInitializeWithConnectionFailure()
+    {
+        $exception = new Exception('Failed!');
+        $this->connectionFactory->create->throws($exception);
+
+        $result = $this->subject->initialize($this->process->mock());
+
+        $this->logger->critical->calledWith(
+            'Failed to establish AMQP connection: {message}',
+            [
+                'message' => 'Failed!',
+                'exception' => $exception,
+            ]
+        );
+
+        $this->assertFalse($result);
+    }
+
+    public function testInitializeWithModuleFailure()
     {
         $exception = new Exception('Failed!');
         $this->module2->initialize->throws($exception);
@@ -109,8 +157,14 @@ class ModularApplicationTest extends PHPUnit_Framework_TestCase
 
         $result = $this->subject->initialize($this->process->mock());
 
-        $this->module1->initialize->calledWith($this->subject);
-        $this->module2->initialize->calledWith($this->subject);
+        $this->module1->initialize->calledWith(
+            $this->subject,
+            $this->channel1->mock()
+        );
+        $this->module2->initialize->calledWith(
+            $this->subject,
+            $this->channel2->mock()
+        );
         $this->module3->initialize->never()->called();
 
         $this->logger->critical->calledWith(
@@ -135,10 +189,56 @@ class ModularApplicationTest extends PHPUnit_Framework_TestCase
         $this->module1->shutdown->called();
         $this->module2->shutdown->called();
 
+        $this->connection->close->never()->called();
+
         $this->assertTrue($result);
     }
 
-    public function testShutdownWithFailure()
+    public function testShutdownClosesConnection()
+    {
+        $this->subject->initialize($this->process->mock());
+
+        $result = $this->subject->shutdown();
+
+        $this->connection->close->called();
+
+        $this->assertTrue($result);
+    }
+
+    public function testShutdownDoesNotCloseAlreadyClosedConnection()
+    {
+        $this->connection->isConnected->returns(false);
+
+        $this->subject->initialize($this->process->mock());
+
+        $result = $this->subject->shutdown();
+
+        $this->connection->close->never()->called();
+
+        $this->assertTrue($result);
+    }
+
+    public function testShutdownWithConnectionCloseFailure()
+    {
+        $exception = new Exception('Failed!');
+        $this->connection->close->throws($exception);
+
+        $this->subject->initialize($this->process->mock());
+
+        $result = $this->subject->shutdown();
+
+        $this->logger->warning->calledWith(
+            'Failed to close AMQP connection gracefully: {message}',
+            [
+                'message' => 'Failed!',
+                'exception' => $exception,
+            ]
+        );
+
+        $this->assertFalse($result);
+    }
+
+    public function testShutdownWithModuleFailure()
     {
         $exception = new Exception('Failed!');
         $this->module2->shutdown->throws($exception);

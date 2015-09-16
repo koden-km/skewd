@@ -3,6 +3,7 @@ namespace Skewd\Application;
 
 use Exception;
 use Psr\Log\LoggerInterface;
+use Skewd\Amqp\ConnectionFactory;
 use Skewd\Process\Process;
 use SplObjectStorage;
 
@@ -14,8 +15,11 @@ final class ModularApplication implements Application
     /**
      * @param LoggerInterface $logger The logger to use for application output.
      */
-    public function __construct(LoggerInterface $logger)
-    {
+    public function __construct(
+        ConnectionFactory $connectionFactory,
+        LoggerInterface $logger
+    ) {
+        $this->connectionFactory = $connectionFactory;
         $this->logger = $logger;
         $this->clear();
     }
@@ -69,9 +73,25 @@ final class ModularApplication implements Application
      */
     public function initialize(Process $process)
     {
+        try {
+            $this->connection = $this->connectionFactory->create();
+        } catch (Exception $e) {
+            $this->logger->critical(
+                'Failed to establish AMQP connection: {message}',
+                [
+                    'message' => $e->getMessage(),
+                    'exception' => $e,
+                ]
+            );
+
+            return false;
+        }
+
         foreach ($this->modules as $module) {
             try {
-                $module->initialize($this);
+                $channel = $this->connection->channel();
+                $module->initialize($this, $channel);
+                $this->modules[$module] = $channel;
             } catch (Exception $e) {
                 $this->logger->critical(
                     'Failed to initialize module "{name}": {message}',
@@ -99,6 +119,8 @@ final class ModularApplication implements Application
         $result = true;
 
         foreach ($this->modules as $module) {
+            $this->modules[$module] = null;
+
             try {
                 $module->shutdown();
             } catch (Exception $e) {
@@ -112,6 +134,26 @@ final class ModularApplication implements Application
                 );
 
                 $result = false;
+            }
+        }
+
+        if ($this->connection) {
+            try {
+                if ($this->connection->isConnected()) {
+                    $this->connection->close();
+                }
+            } catch (Exception $e) {
+                $this->logger->warning(
+                    'Failed to close AMQP connection gracefully: {message}',
+                    [
+                        'message' => $e->getMessage(),
+                        'exception' => $e,
+                    ]
+                );
+
+                $result = false;
+            } finally {
+                $this->connection = null;
             }
         }
 
@@ -145,6 +187,8 @@ final class ModularApplication implements Application
         return true;
     }
 
+    private $connectionFactory;
+    private $connection;
     private $logger;
     private $modules;
 }
