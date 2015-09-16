@@ -1,7 +1,6 @@
 <?php
 namespace Skewd\Server;
 
-
 /**
  * A collection of modules used by a modular server.
  */
