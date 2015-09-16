@@ -55,7 +55,7 @@ final class TickingProcess implements Process
                     $this->transition(TickingProcessStatus::STARTING());
                 } elseif (TickingProcessStatus::ERROR() === $this->status) {
                     $this->shutdown();
-                    @$iso->usleep($this->sleepOnError * 1000000);
+                    @$iso->usleep(self::SLEEP_ON_ERROR * 1000000);
                     $this->transition(TickingProcessStatus::STARTING());
                 } elseif (TickingProcessStatus::STOPPING() === $this->status) {
                     $this->shutdown();
@@ -63,7 +63,7 @@ final class TickingProcess implements Process
                 }
 
                 @$iso->pcntl_signal_dispatch();
-                @$iso->usleep($this->sleepOnTick * 1000000);
+                @$iso->usleep(self::SLEEP_ON_TICK * 1000000);
             } while (true);
         } catch (Exception $e) {
             $this->logger->error(
@@ -161,7 +161,7 @@ final class TickingProcess implements Process
         } elseif (TickingProcessStatus::ERROR() === $this->status) {
             $message = sprintf(
                 'Process is restarting after %s second(s) due to an error',
-                round($this->sleepOnError, 1)
+                round(self::SLEEP_ON_ERROR, 1)
             );
         } elseif (TickingProcessStatus::STOPPING() === $this->status) {
             $message = 'Process is stopping';
@@ -172,9 +172,10 @@ final class TickingProcess implements Process
         $this->logger->notice($message);
     }
 
+    const SLEEP_ON_ERROR = 5;
+    const SLEEP_ON_TICK = 0;
+
     private $action;
     private $logger;
     private $status;
-    private $sleepOnError = 5;
-    private $sleepOnTick = 0;
 }

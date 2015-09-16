@@ -2,7 +2,9 @@
 namespace Skewd\Application;
 
 use Eloquent\Phony\Phpunit\Phony;
+use ErrorException;
 use Exception;
+use LogicException;
 use PHPUnit_Framework_TestCase;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
@@ -270,15 +272,78 @@ class ModularApplicationTest extends PHPUnit_Framework_TestCase
         $this->subject->add($this->module1->mock());
         $this->subject->add($this->module2->mock());
 
+        $this->subject->initialize($this->process->mock());
+
         $result = $this->subject->tick();
 
-        $this->module1->tick->called();
-        $this->module2->tick->called();
+        Phony::inOrder(
+            $this->connection->select->calledWith(0, 10000),
+            Phony::anyOrder(
+                Phony::inOrder(
+                    $this->module1->tick->called(),
+                    $this->channel1->wait->calledWith(null, true, 0)
+                ),
+                Phony::inOrder(
+                    $this->module2->tick->called(),
+                    $this->channel2->wait->calledWith(null, true, 0)
+                )
+            )
+        );
 
         $this->assertTrue($result);
     }
 
-    public function testTickWithFailure()
+    public function testTickWithoutInitialization()
+    {
+        $this->setExpectedException(
+            LogicException::class,
+            'Application has not been initialized.'
+        );
+
+        $this->subject->tick();
+    }
+
+    public function testTickWithConnectionSelectInteruptedBySignal()
+    {
+        $exception = new ErrorException('Interrupted system call');
+        $this->connection->select->throws($exception);
+
+        $this->subject->add($this->module1->mock());
+
+        $this->subject->initialize($this->process->mock());
+
+        $result = $this->subject->tick();
+
+        $this->module1->tick->never()->called();
+
+        $this->assertTrue($result);
+    }
+
+    public function testTickWithConnectionSelectFailure()
+    {
+        $exception = new Exception('Failed!');
+        $this->connection->select->throws($exception);
+
+        $this->subject->add($this->module1->mock());
+
+        $this->subject->initialize($this->process->mock());
+
+        $result = $this->subject->tick();
+
+        $this->module1->tick->never()->called();
+
+        $this->logger->critical->calledWith(
+            'Failure while waiting for AMQP connection: {message}',
+            [
+                'message' => 'Failed!',
+                'exception' => $exception,
+            ]
+        );
+
+        $this->assertFalse($result);
+    }
+
+    public function testTickWithModuleFailure()
     {
         $exception = new Exception('Failed!');
         $this->module2->tick->throws($exception);
@@ -286,6 +351,8 @@ class ModularApplicationTest extends PHPUnit_Framework_TestCase
         $this->subject->add($this->module1->mock());
         $this->subject->add($this->module2->mock());
         $this->subject->add($this->module3->mock());
+
+        $this->subject->initialize($this->process->mock());
 
         $result = $this->subject->tick();
 

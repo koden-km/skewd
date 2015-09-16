@@ -1,7 +1,9 @@
 <?php
 namespace Skewd\Application;
 
+use ErrorException;
 use Exception;
+use LogicException;
 use Psr\Log\LoggerInterface;
 use Skewd\Amqp\ConnectionFactory;
 use Skewd\Process\Process;
@@ -90,8 +92,8 @@ final class ModularApplication implements Application
         foreach ($this->modules as $module) {
             try {
                 $channel = $this->connection->channel();
-                $module->initialize($this, $channel);
                 $this->modules[$module] = $channel;
+                $module->initialize($this, $channel);
             } catch (Exception $e) {
                 $this->logger->critical(
                     'Failed to initialize module "{name}": {message}',
@@ -167,9 +169,41 @@ final class ModularApplication implements Application
      */
     public function tick()
     {
+        if (!$this->connection) {
+            throw new LogicException('Application has not been initialized.');
+        }
+
+        try {
+            $this->connection->select(0, self::SELECT_TIMEOUT * 1000000);
+        } catch (Exception $e) {
+            // select was interrupted by signal ...
+            if (
+                $e instanceof ErrorException
+                && false !== strpos($e->getMessage(), 'Interrupted system call')
+            ) {
+                return true;
+            }
+
+            $this->logger->critical(
+                'Failure while waiting for AMQP connection: {message}',
+                [
+                    'message' => $e->getMessage(),
+                    'exception' => $e,
+                ]
+            );
+
+            return false;
+        }
+
         foreach ($this->modules as $module) {
             try {
                 $module->tick();
+
+                $this->modules[$module]->wait(
+                    null, // allowed methods
+                    true, // non-blocking
+                    0     // timeout
+                );
             } catch (Exception $e) {
                 $this->logger->critical(
                     'Failure in module "{name}": {message}',
@@ -186,6 +220,8 @@ final class ModularApplication implements Application
 
         return true;
     }
+
+    const SELECT_TIMEOUT = 0.01;
 
     private $connectionFactory;
     private $connection;
