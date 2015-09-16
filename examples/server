@@ -1,0 +1,66 @@
+#!/usr/bin/env php
+<?php
+require __DIR__ . '/../vendor/autoload.php';
+
+Eloquent\Asplode\Asplode::install();
+
+use Icecave\Stump\Logger;
+use Skewd\Server\ModularServer;
+use Skewd\Server\Module;
+use Skewd\Server\Server;
+
+class MyModule implements Module
+{
+    /**
+     * Get the name of the module.
+     *
+     * @return string
+     */
+    public function name()
+    {
+        return 'my-module';
+    }
+
+    /**
+     * Initialize the module.
+     *
+     * This method is invoked when a server starts (or restarts).
+     *
+     * @param Server $server The server under which the module is running.
+     */
+    public function initialize(Server $server)
+    {
+        if (rand(0, 1))
+            throw new \Exception('OH SHIT!');
+    }
+
+    /**
+     * Shutdown the module.
+     *
+     * This method is invoked when a server stops (or restarts).
+     *
+     * A module may be shutdown even if it has not previously been initialized.
+     */
+    public function shutdown()
+    {
+        // if (rand(0, 1))
+        throw new \Exception('OH SHIT!');
+    }
+
+    /**
+     * Perform the module's action.
+     *
+     * This method is invoked repeatedly while the server is running.
+     */
+    public function tick()
+    {
+        echo '.';
+        usleep(500);
+        // if (rand(0, 10000) === 0)
+        //     throw new \Exception('OH SHIT!');
+    }
+}
+
+$server = new ModularServer(new Logger);
+$server->modules()->add(new MyModule);
+$server->start();

@@ -6,25 +6,25 @@ use Exception;
 use PHPUnit_Framework_TestCase;
 use Psr\Log\LoggerInterface;
 
-class ModuleCollectionTest extends PHPUnit_Framework_TestCase
+class OrderedModuleCollectionTest extends PHPUnit_Framework_TestCase
 {
     public function setUp()
     {
-        $this->logger = Phony::mock(LoggerInterface::class);
+        $this->logger = Phony::fullMock(LoggerInterface::class);
 
-        $this->subject = new ModuleCollection(
+        $this->subject = new OrderedModuleCollection(
             $this->logger->mock()
         );
 
-        $this->server = Phony::mock(Server::class);
+        $this->server = Phony::fullMock(Server::class);
 
-        $this->module1 = Phony::mock(Module::class);
+        $this->module1 = Phony::fullMock(Module::class);
         $this->module1->name->returns('<module 1>');
 
-        $this->module2 = Phony::mock(Module::class);
+        $this->module2 = Phony::fullMock(Module::class);
         $this->module2->name->returns('<module 2>');
 
-        $this->module3 = Phony::mock(Module::class);
+        $this->module3 = Phony::fullMock(Module::class);
         $this->module3->name->returns('<module 3>');
     }
 

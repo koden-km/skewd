@@ -1,146 +1,60 @@
 <?php
 namespace Skewd\Server;
 
-use Exception;
-use Psr\Log\LoggerInterface;
-use SplObjectStorage;
 
 /**
  * A collection of modules used by a modular server.
  */
-final class ModuleCollection
+interface ModuleCollection
 {
-    public function __construct(LoggerInterface $logger)
-    {
-        $this->logger = $logger;
-        $this->clear();
-    }
-
     /**
      * Add a module to the collection.
      *
-     * @param Module $module
+     * @param Module $module The module to add.
      */
-    public function add(Module $module)
-    {
-        $this->modules->attach($module);
-    }
+    public function add(Module $module);
 
     /**
      * Remove a module from the collection.
      *
-     * @param Module $module
+     * @param Module $module The module to remove.
      */
-    public function remove(Module $module)
-    {
-        $this->modules->detach($module);
-    }
+    public function remove(Module $module);
 
     /**
      * Check if a module is present in this collection.
      *
-     * @param Module $module
+     * @param Module $module The module to check.
      *
-     * @return boolean
+     * @return boolean True if the module is in the collection; otherwise, false.
      */
-    public function has(Module $module)
-    {
-        return $this->modules->contains($module);
-    }
+    public function has(Module $module);
 
     /**
-     * Remove all modules.
+     * Remove all modules from the collection.
      */
-    public function clear()
-    {
-        $this->modules = new SplObjectStorage;
-    }
+    public function clear();
 
     /**
      * Initialize all modules in the collection.
      *
-     * @param Server $server The server under which the module is running.
+     * @param Server $server The server under which the modules are running.
      *
-     * @return boolean True if all modules initialized successfully; otherwise, false.
+     * @return boolean True if all modules were initialized successfully; otherwise, false.
      */
-    public function initialize(Server $server)
-    {
-        foreach ($this->modules as $module) {
-            try {
-                $module->initialize($server);
-            } catch (Exception $e) {
-                $this->logger->critical(
-                    'Failed to initialize server module "{name}": {message}',
-                    [
-                        'name' => $module->name(),
-                        'message' => $e->getMessage(),
-                        'exception' => $e,
-                    ]
-                );
-
-                return false;
-            }
-        }
-
-        return true;
-    }
+    public function initialize(Server $server);
 
     /**
      * Shut down all modules in the collection.
      *
      * @return boolean True if all modules shut down successfully; otherwise, false.
      */
-    public function shutdown()
-    {
-        $result = true;
-
-        foreach ($this->modules as $module) {
-            try {
-                $module->shutdown();
-            } catch (Exception $e) {
-                $this->logger->warning(
-                    'Failed to shut down server module "{name}": {message}',
-                    [
-                        'name' => $module->name(),
-                        'message' => $e->getMessage(),
-                        'exception' => $e,
-                    ]
-                );
-
-                $result = false;
-            }
-        }
-
-        return $result;
-    }
+    public function shutdown();
 
     /**
      * Perform all module's actions.
      *
      * @return boolean True if all modules ticked successfully; otherwise, false.
      */
-    public function tick()
-    {
-        foreach ($this->modules as $module) {
-            try {
-                $module->tick();
-            } catch (Exception $e) {
-                $this->logger->critical(
-                    'Failure in server module "{name}": {message}',
-                    [
-                        'name' => $module->name(),
-                        'message' => $e->getMessage(),
-                        'exception' => $e,
-                    ]
-                );
-
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private $logger;
-    private $modules;
+    public function tick();
 }
