@@ -1,9 +1,9 @@
 <?php
 
-namespace Skewd\Server;
+namespace Skewd\Skewd;
 
 class PackageInfo
 {
-    const NAME = 'Server';
+    const NAME = 'Skewd';
     const VERSION = '0.0.0';
 }

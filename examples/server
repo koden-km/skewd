@@ -6,10 +6,10 @@ Eloquent\Asplode\Asplode::install();
 
 use Icecave\Stump\Logger;
 use PhpAmqpLib\Channel\AMQPChannel;
-use Skewd\Server\ModularServer;
-use Skewd\Server\Module;
-use Skewd\Server\Server;
-use Skewd\Server\ServerProcess;
+use Skewd\Application\Application;
+use Skewd\Application\ModularApplication;
+use Skewd\Application\Module;
+use Skewd\Process\TickingProcess;
 
 class MyModule implements Module
 {
@@ -18,7 +18,7 @@ class MyModule implements Module
         return 'my-module';
     }
 
-    public function initialize(Server $server/*, AMQPChannel $channel*/)
+    public function initialize(Application $application/*, AMQPChannel $channel*/)
     {
         if (rand(0, 1))
             throw new \Exception('OH SHIT!');
@@ -39,9 +39,12 @@ class MyModule implements Module
     }
 }
 
-$logger = new Logger;
-$server = new ModularServer($logger);
-$server->add(new MyModule);
+// -----------------------------------------------------------------------------
 
-$process = new ServerProcess($server, $logger);
+$logger = new Logger;
+$app = new ModularApplication($logger);
+$app->add(new MyModule);
+
+$process = new TickingProcess($app, $logger);
 $process->start();
+

@@ -1,1 +1,1 @@
-# Server Changelog
+# Skewd Changelog
