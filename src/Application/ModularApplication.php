@@ -7,7 +7,7 @@ use LogicException;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Exception\AMQPTimeoutException;
 use Psr\Log\LoggerInterface;
-use Skewd\Amqp\ConnectionFactory;
+use Skewd\Common\Amqp\ConnectionFactory;
 use Skewd\Process\Process;
 use SplObjectStorage;
 

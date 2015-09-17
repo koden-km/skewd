@@ -1,5 +1,5 @@
 <?php
-namespace Skewd\Session;
+namespace Skewd\Common\Session;
 
 interface Session
 {
@@ -31,7 +31,7 @@ interface Session
      *
      * @param string $name The property name.
      *
-     * @return mixed The property value.
+     * @return mixed          The property value.
      * @throws LogicException if the property does not exist.
      */
     public function get($name);
@@ -49,8 +49,8 @@ interface Session
     /**
      * Get the value of a property, or a default value if not present.
      *
-     * @param string $name The property name.
-     * @param mixed $default The value to return if the property is not present.
+     * @param string $name    The property name.
+     * @param mixed  $default The value to return if the property is not present.
      *
      * @return mixed The property value, or the default value.
      */
@@ -68,8 +68,8 @@ interface Session
     /**
      * Set the value of a property.
      *
-     * @param string $name The property name.
-     * @param mixed $value The property value.
+     * @param string $name  The property name.
+     * @param mixed  $value The property value.
      */
     public function set($name, $value);
 

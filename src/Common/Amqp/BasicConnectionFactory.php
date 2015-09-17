@@ -1,5 +1,5 @@
 <?php
-namespace Skewd\Amqp;
+namespace Skewd\Common\Amqp;
 
 use Icecave\Isolator\IsolatorTrait;
 use PhpAmqpLib\Connection\AMQPStreamConnection;

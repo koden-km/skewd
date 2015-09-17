@@ -1,5 +1,5 @@
 <?php
-namespace Skewd\Amqp;
+namespace Skewd\Common\Amqp;
 
 use Eloquent\Phony\Phpunit\Phony;
 use Icecave\Isolator\Isolator;

@@ -9,7 +9,7 @@ use PHPUnit_Framework_TestCase;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use Psr\Log\LoggerInterface;
-use Skewd\Amqp\ConnectionFactory;
+use Skewd\Common\Amqp\ConnectionFactory;
 use Skewd\Process\Process;
 
 class ModularApplicationTest extends PHPUnit_Framework_TestCase

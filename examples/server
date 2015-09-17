@@ -6,7 +6,7 @@ Eloquent\Asplode\Asplode::install();
 
 use Icecave\Stump\Logger;
 use PhpAmqpLib\Channel\AMQPChannel;
-use Skewd\Amqp\BasicConnectionFactory;
+use Skewd\Common\Amqp\BasicConnectionFactory;
 use Skewd\Application\Application;
 use Skewd\Application\ModularApplication;
 use Skewd\Application\Module;
