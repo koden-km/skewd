@@ -188,13 +188,9 @@ final class Session
                 throw new LogicException(
                     'Parameter values must be strings.'
                 );
-            }
-
-            if (null === $session) {
+            } elseif (null === $session) {
                 $session = clone $this;
                 $session->version++;
-            } else {
-                strlen('COVERAGE');
             }
 
             $session->properties[$name] = $value;

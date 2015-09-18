@@ -7,6 +7,15 @@ namespace Skewd\Common\Session;
 interface SessionStore
 {
     /**
+     * Fetch a session from the store.
+     *
+     * @param string $id The session ID.
+     *
+     * @return Session|null The session, or null if it has not been stored.
+     */
+    public function get($id);
+
+    /**
      * Store a session in the store.
      *
      * @param Session $session The session to store.
@@ -22,15 +31,6 @@ interface SessionStore
      * @return boolean True if $session was stored; false if a later version was already stored.
      */
     public function update(Session $session, Session &$latest = null);
-
-    /**
-     * Fetch a session from the store.
-     *
-     * @param string $id The session ID.
-     *
-     * @return Session|null The session, or null if it has not been stored.
-     */
-    public function get($id);
 
     /**
      * Remove a session from the store.
