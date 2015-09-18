@@ -5,6 +5,8 @@ use Eloquent\Enumeration\AbstractEnumeration;
 
 /**
  * @access private
+ *
+ * This type is not part of the public API.
  */
 final class TickingProcessStatus extends AbstractEnumeration
 {
