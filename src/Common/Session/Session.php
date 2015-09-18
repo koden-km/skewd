@@ -3,18 +3,33 @@ namespace Skewd\Common\Session;
 
 use LogicException;
 
+/**
+ * A session.
+ */
 final class Session
 {
     /**
      * @param string                $id         The session ID.
+     * @param string                $owner      The owner of this session.
      * @param array<string, string> $attributes The session attributes.
      */
-    public function __construct($id, array $attributes = [])
+    private function __construct($id, $owner, array $attributes = [])
     {
         $this->id = $id;
+        $this->owner = $owner;
         $this->version = 1;
         $this->attributes = $attributes;
         $this->properties = [];
+    }
+
+    /**
+     * @param string                $id         The session ID.
+     * @param string                $owner      The owner of this session.
+     * @param array<string, string> $attributes The session attributes.
+     */
+    public static function create($id, $owner, array $attributes = [])
+    {
+        return new self($id, $owner, $attributes);
     }
 
     /**
@@ -25,6 +40,16 @@ final class Session
     public function id()
     {
         return $this->id;
+    }
+
+    /**
+     * Get the session owner.
+     *
+     * @return string The owner of this session.
+     */
+    public function owner()
+    {
+        return $this->owner;
     }
 
     /**
@@ -280,6 +305,7 @@ final class Session
     }
 
     private $id;
+    private $owner;
     private $version;
     private $attributes;
     private $properties;

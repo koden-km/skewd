@@ -13,8 +13,9 @@ class SessionTest extends PHPUnit_Framework_TestCase
             'b' => 2,
         ];
 
-        $this->subject = new Session(
+        $this->subject = Session::create(
             '<id>',
+            '<owner>',
             $this->attributes
         );
     }
@@ -24,6 +25,14 @@ class SessionTest extends PHPUnit_Framework_TestCase
         $this->assertSame(
             '<id>',
             $this->subject->id()
+        );
+    }
+
+    public function testOwner()
+    {
+        $this->assertSame(
+            '<owner>',
+            $this->subject->owner()
         );
     }
 

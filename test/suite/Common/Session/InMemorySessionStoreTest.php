@@ -8,8 +8,8 @@ class InMemorySessionStoreTest extends PHPUnit_Framework_TestCase
     public function setUp()
     {
         $this->subject = new InMemorySessionStore();
-        $this->sessionA = new Session('<a>');
-        $this->sessionB = new Session('<b>');
+        $this->sessionA = Session::create('<a>', '<owner>');
+        $this->sessionB = Session::create('<b>', '<owner>');
     }
 
     public function testStore()
