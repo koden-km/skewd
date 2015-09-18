@@ -38,4 +38,9 @@ interface SessionStore
      * @param string $id The session ID.
      */
     public function remove($id);
+
+    /**
+     * Remove all sessions from the store.
+     */
+    public function clear();
 }

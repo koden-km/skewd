@@ -67,5 +67,13 @@ final class InMemorySessionStore implements SessionStore
         unset($this->sessions[$id]);
     }
 
+    /**
+     * Remove all sessions from the store.
+     */
+    public function clear()
+    {
+        $this->sessions = [];
+    }
+
     private $sessions = [];
 }

@@ -126,4 +126,19 @@ class InMemorySessionStoreTest extends PHPUnit_Framework_TestCase
             $this->subject->get('<b>')
         );
     }
+
+    public function testClear()
+    {
+        $this->subject->store($this->sessionA);
+        $this->subject->store($this->sessionB);
+        $this->subject->clear();
+
+        $this->assertNull(
+            $this->subject->get('<a>')
+        );
+
+        $this->assertNull(
+            $this->subject->get('<b>')
+        );
+    }
 }
