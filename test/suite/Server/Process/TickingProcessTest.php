@@ -1,5 +1,5 @@
 <?php
-namespace Skewd\Process;
+namespace Skewd\Server\Process;
 
 use Eloquent\Phony\Phpunit\Phony;
 use Exception;

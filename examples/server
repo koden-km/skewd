@@ -7,10 +7,10 @@ Eloquent\Asplode\Asplode::install();
 use Icecave\Stump\Logger;
 use PhpAmqpLib\Channel\AMQPChannel;
 use Skewd\Common\Amqp\BasicConnectionFactory;
-use Skewd\Application\Application;
-use Skewd\Application\ModularApplication;
-use Skewd\Application\Module;
-use Skewd\Process\TickingProcess;
+use Skewd\Server\Application\Application;
+use Skewd\Server\Application\ModularApplication;
+use Skewd\Server\Application\Module;
+use Skewd\Server\Process\TickingProcess;
 
 class MyModule implements Module
 {

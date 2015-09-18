@@ -1,5 +1,5 @@
 <?php
-namespace Skewd\Process;
+namespace Skewd\Server\Process;
 
 /**
  * Defines the action to be taken by a ticking process.

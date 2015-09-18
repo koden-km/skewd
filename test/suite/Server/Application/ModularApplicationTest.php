@@ -1,5 +1,5 @@
 <?php
-namespace Skewd\Application;
+namespace Skewd\Server\Application;
 
 use Eloquent\Phony\Phpunit\Phony;
 use ErrorException;
@@ -10,7 +10,7 @@ use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use Psr\Log\LoggerInterface;
 use Skewd\Common\Amqp\ConnectionFactory;
-use Skewd\Process\Process;
+use Skewd\Server\Process\Process;
 
 class ModularApplicationTest extends PHPUnit_Framework_TestCase
 {

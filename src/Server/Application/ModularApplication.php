@@ -1,5 +1,5 @@
 <?php
-namespace Skewd\Application;
+namespace Skewd\Server\Application;
 
 use ErrorException;
 use Exception;
@@ -8,7 +8,7 @@ use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Exception\AMQPTimeoutException;
 use Psr\Log\LoggerInterface;
 use Skewd\Common\Amqp\ConnectionFactory;
-use Skewd\Process\Process;
+use Skewd\Server\Process\Process;
 use SplObjectStorage;
 
 /**

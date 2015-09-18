@@ -1,5 +1,5 @@
 <?php
-namespace Skewd\Application;
+namespace Skewd\Server\Application;
 
 use PhpAmqpLib\Channel\AMQPChannel;
 
