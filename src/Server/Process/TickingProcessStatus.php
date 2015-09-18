@@ -4,9 +4,9 @@ namespace Skewd\Server\Process;
 use Eloquent\Enumeration\AbstractEnumeration;
 
 /**
- * @access private
+ * *** THIS TYPE IS NOT PART OF THE PUBLIC API ***
  *
- * This type is not part of the public API.
+ * @access private
  */
 final class TickingProcessStatus extends AbstractEnumeration
 {

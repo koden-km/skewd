@@ -20,6 +20,42 @@ class SessionTest extends PHPUnit_Framework_TestCase
         );
     }
 
+    public function testCreateAtVersion()
+    {
+        $session = Session::createAtVersion(
+            '<id>',
+            '<owner>',
+            123,
+            ['foo' => 'bar'],
+            ['baz' => 'qux']
+        );
+
+        $this->assertSame(
+            '<id>',
+            $session->id()
+        );
+
+        $this->assertSame(
+            '<owner>',
+            $session->owner()
+        );
+
+        $this->assertSame(
+            123,
+            $session->version()
+        );
+
+        $this->assertSame(
+            ['foo' => 'bar'],
+            $session->attributes()
+        );
+
+        $this->assertSame(
+            ['baz' => 'qux'],
+            $session->properties()
+        );
+    }
+
     public function testId()
     {
         $this->assertSame(

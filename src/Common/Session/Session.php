@@ -33,6 +33,27 @@ final class Session
     }
 
     /**
+     * @param string                $id         The session ID.
+     * @param string                $owner      The owner of this session.
+     * @param integer               $version    The session version.
+     * @param array<string, string> $attributes The session attributes.
+     * @param array<string, string> $properties The session properties.
+     */
+    public static function createAtVersion(
+        $id,
+        $owner,
+        $version,
+        array $attributes = [],
+        array $properties = []
+    ) {
+        $session = new self($id, $owner, $attributes);
+        $session->version = $version;
+        $session->properties = $properties;
+
+        return $session;
+    }
+
+    /**
      * Get the session ID.
      *
      * @return string A unique ID for this session.
