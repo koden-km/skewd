@@ -8,15 +8,15 @@ class SessionTest extends PHPUnit_Framework_TestCase
 {
     public function setUp()
     {
-        $this->attributes = [
-            'a' => 1,
-            'b' => 2,
+        $this->constants = [
+            'a' => '1',
+            'b' => '2',
         ];
 
         $this->subject = Session::create(
             '<id>',
             '<owner>',
-            $this->attributes
+            $this->constants
         );
     }
 
@@ -47,12 +47,12 @@ class SessionTest extends PHPUnit_Framework_TestCase
 
         $this->assertSame(
             ['foo' => 'bar'],
-            $session->attributes()
+            $session->constants()
         );
 
         $this->assertSame(
             ['baz' => 'qux'],
-            $session->properties()
+            $session->variables()
         );
     }
 
@@ -80,19 +80,19 @@ class SessionTest extends PHPUnit_Framework_TestCase
         );
     }
 
-    public function testAttributes()
+    public function testConstants()
     {
         $this->assertSame(
-            $this->attributes,
-            $this->subject->attributes()
+            $this->constants,
+            $this->subject->constants()
         );
     }
 
-    public function testPropertiesIsInitiallyEmpty()
+    public function testVariablesIsInitiallyEmpty()
     {
         $this->assertSame(
             [],
-            $this->subject->properties()
+            $this->subject->variables()
         );
     }
 
@@ -110,7 +110,7 @@ class SessionTest extends PHPUnit_Framework_TestCase
     {
         $this->setExpectedException(
             LogicException::class,
-            'Session <id> version 1 does not contain a property named "foo".'
+            'Session <id> version 1 does not contain a variable named "foo".'
         );
 
         $this->subject->get('foo');
@@ -184,7 +184,7 @@ class SessionTest extends PHPUnit_Framework_TestCase
 
         $this->assertSame(
             ['foo' => 'bar'],
-            $session->properties()
+            $session->variables()
         );
     }
 
@@ -198,7 +198,7 @@ class SessionTest extends PHPUnit_Framework_TestCase
 
         $this->assertSame(
             ['foo' => 'bar', 'baz' => 'qux'],
-            $session->properties()
+            $session->variables()
         );
     }
 
@@ -212,7 +212,7 @@ class SessionTest extends PHPUnit_Framework_TestCase
 
         $this->assertSame(
             ['foo' => 'baz'],
-            $session->properties()
+            $session->variables()
         );
     }
 
@@ -241,14 +241,14 @@ class SessionTest extends PHPUnit_Framework_TestCase
 
     public function testSetMany()
     {
-        $properties = ['foo' => 'bar'];
-        $session = $this->subject->setMany($properties);
+        $variables = ['foo' => 'bar'];
+        $session = $this->subject->setMany($variables);
 
         $this->assertImmutableSessionValues($session, 2);
 
         $this->assertSame(
-            $properties,
-            $session->properties()
+            $variables,
+            $session->variables()
         );
     }
 
@@ -265,7 +265,7 @@ class SessionTest extends PHPUnit_Framework_TestCase
                 'foo' => 'bar',
                 'baz' => 'qux',
             ],
-            $session->properties()
+            $session->variables()
         );
     }
 
@@ -283,7 +283,7 @@ class SessionTest extends PHPUnit_Framework_TestCase
                 'baz' => 'thud',
                 'grunt' => 'gorp',
             ],
-            $session->properties()
+            $session->variables()
         );
     }
 
@@ -320,7 +320,7 @@ class SessionTest extends PHPUnit_Framework_TestCase
 
         $this->assertSame(
             ['baz' => 'qux'],
-            $session->properties()
+            $session->variables()
         );
     }
 
@@ -357,7 +357,7 @@ class SessionTest extends PHPUnit_Framework_TestCase
 
         $this->assertSame(
             ['baz' => 'qux'],
-            $session->properties()
+            $session->variables()
         );
     }
 
@@ -371,7 +371,7 @@ class SessionTest extends PHPUnit_Framework_TestCase
 
         $this->assertSame(
             [],
-            $session->properties()
+            $session->variables()
         );
     }
 
@@ -388,7 +388,7 @@ class SessionTest extends PHPUnit_Framework_TestCase
         );
     }
 
-    public function testRemoveWithNoChangeAndEmptyProperties()
+    public function testRemoveWithNoChangeAndEmptyVariables()
     {
         $session = $this->subject->remove('baz');
 
@@ -410,7 +410,7 @@ class SessionTest extends PHPUnit_Framework_TestCase
 
         $this->assertSame(
             [],
-            $session->properties()
+            $session->variables()
         );
     }
 
@@ -439,8 +439,8 @@ class SessionTest extends PHPUnit_Framework_TestCase
         );
 
         $this->assertSame(
-            $this->attributes,
-            $session->attributes()
+            $this->constants,
+            $session->constants()
         );
     }
 }
