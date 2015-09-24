@@ -4,7 +4,6 @@ namespace Skewd\Server\Application;
 use ErrorException;
 use Exception;
 use LogicException;
-use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Exception\AMQPTimeoutException;
 use Psr\Log\LoggerInterface;
 use Skewd\Common\Amqp\ConnectionFactory;

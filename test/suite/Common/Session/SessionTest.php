@@ -3,15 +3,16 @@ namespace Skewd\Common\Session;
 
 use LogicException;
 use PHPUnit_Framework_TestCase;
+use Skewd\Common\Collection\AttributeCollection;
 
 class SessionTest extends PHPUnit_Framework_TestCase
 {
     public function setUp()
     {
-        $this->constants = [
+        $this->constants = AttributeCollection::create([
             'a' => '1',
             'b' => '2',
-        ];
+        ]);
 
         $this->subject = Session::create(
             '<id>',
@@ -22,12 +23,15 @@ class SessionTest extends PHPUnit_Framework_TestCase
 
     public function testCreateAtVersion()
     {
+        $constants = AttributeCollection::create(['foo' => 'bar']);
+        $variables = AttributeCollection::create(['baz' => 'qux']);
+
         $session = Session::createAtVersion(
             '<id>',
             '<owner>',
             123,
-            ['foo' => 'bar'],
-            ['baz' => 'qux']
+            $constants,
+            $variables
         );
 
         $this->assertSame(
@@ -46,12 +50,12 @@ class SessionTest extends PHPUnit_Framework_TestCase
         );
 
         $this->assertSame(
-            ['foo' => 'bar'],
+            $constants,
             $session->constants()
         );
 
         $this->assertSame(
-            ['baz' => 'qux'],
+            $variables,
             $session->variables()
         );
     }
@@ -90,89 +94,8 @@ class SessionTest extends PHPUnit_Framework_TestCase
 
     public function testVariablesIsInitiallyEmpty()
     {
-        $this->assertSame(
-            [],
-            $this->subject->variables()
-        );
-    }
-
-    public function testGet()
-    {
-        $session = $this->subject->set('foo', 'bar');
-
-        $this->assertSame(
-            'bar',
-            $session->get('foo')
-        );
-    }
-
-    public function testGetWithUnknownProperty()
-    {
-        $this->setExpectedException(
-            LogicException::class,
-            'Session <id> version 1 does not contain a variable named "foo".'
-        );
-
-        $this->subject->get('foo');
-    }
-
-    public function testTryGet()
-    {
-        $session = $this->subject->set('foo', 'bar');
-
-        $value = null;
-
         $this->assertTrue(
-            $session->tryGet('foo', $value)
-        );
-
-        $this->assertSame(
-            'bar',
-            $value
-        );
-    }
-
-    public function testTryGetWithUnknownProperty()
-    {
-        $this->assertFalse(
-            $this->subject->tryGet('foo', $value)
-        );
-    }
-
-    public function testSafeGet()
-    {
-        $session = $this->subject->set('foo', 'bar');
-
-        $this->assertSame(
-            'bar',
-            $session->safeGet('foo')
-        );
-    }
-
-    public function testSafeGetWithUnknownProperty()
-    {
-        $this->assertSame(
-            'bar',
-            $this->subject->safeGet('foo', 'bar')
-        );
-    }
-
-    public function testSafeGetDefaultsToEmptyString()
-    {
-        $this->assertSame(
-            '',
-            $this->subject->safeGet('foo')
-        );
-    }
-
-    public function testHas()
-    {
-        $this->assertFalse(
-            $this->subject->has('foo')
-        );
-
-        $this->assertTrue(
-            $this->subject->set('foo', 'bar')->has('foo')
+            $this->subject->variables()->isEmpty()
         );
     }
 
@@ -182,9 +105,9 @@ class SessionTest extends PHPUnit_Framework_TestCase
 
         $this->assertImmutableSessionValues($session, 2);
 
-        $this->assertSame(
+        $this->assertSessionVariables(
             ['foo' => 'bar'],
-            $session->variables()
+            $session
         );
     }
 
@@ -196,9 +119,9 @@ class SessionTest extends PHPUnit_Framework_TestCase
 
         $this->assertImmutableSessionValues($session, 3);
 
-        $this->assertSame(
+        $this->assertSessionVariables(
             ['foo' => 'bar', 'baz' => 'qux'],
-            $session->variables()
+            $session
         );
     }
 
@@ -210,9 +133,9 @@ class SessionTest extends PHPUnit_Framework_TestCase
 
         $this->assertImmutableSessionValues($session, 3);
 
-        $this->assertSame(
+        $this->assertSessionVariables(
             ['foo' => 'baz'],
-            $session->variables()
+            $session
         );
     }
 
@@ -233,7 +156,7 @@ class SessionTest extends PHPUnit_Framework_TestCase
     {
         $this->setExpectedException(
             LogicException::class,
-            'Parameter values must be strings.'
+            'Attribute value must be a string.'
         );
 
         $this->subject->set('foo', 100);
@@ -246,9 +169,9 @@ class SessionTest extends PHPUnit_Framework_TestCase
 
         $this->assertImmutableSessionValues($session, 2);
 
-        $this->assertSame(
+        $this->assertSessionVariables(
             $variables,
-            $session->variables()
+            $session
         );
     }
 
@@ -260,12 +183,12 @@ class SessionTest extends PHPUnit_Framework_TestCase
 
         $this->assertImmutableSessionValues($session, 3);
 
-        $this->assertSame(
+        $this->assertSessionVariables(
             [
                 'foo' => 'bar',
                 'baz' => 'qux',
             ],
-            $session->variables()
+            $session
         );
     }
 
@@ -277,13 +200,13 @@ class SessionTest extends PHPUnit_Framework_TestCase
 
         $this->assertImmutableSessionValues($session, 3);
 
-        $this->assertSame(
+        $this->assertSessionVariables(
             [
                 'foo' => 'bar',
                 'baz' => 'thud',
                 'grunt' => 'gorp',
             ],
-            $session->variables()
+            $session
         );
     }
 
@@ -304,7 +227,7 @@ class SessionTest extends PHPUnit_Framework_TestCase
     {
         $this->setExpectedException(
             LogicException::class,
-            'Parameter values must be strings.'
+            'Attribute value must be a string.'
         );
 
         $this->subject->setMany(['foo' => 100]);
@@ -318,9 +241,9 @@ class SessionTest extends PHPUnit_Framework_TestCase
 
         $this->assertImmutableSessionValues($session, 3);
 
-        $this->assertSame(
+        $this->assertSessionVariables(
             ['baz' => 'qux'],
-            $session->variables()
+            $session
         );
     }
 
@@ -341,7 +264,7 @@ class SessionTest extends PHPUnit_Framework_TestCase
     {
         $this->setExpectedException(
             LogicException::class,
-            'Parameter values must be strings.'
+            'Attribute value must be a string.'
         );
 
         $this->subject->replaceAll(['foo' => 100]);
@@ -355,9 +278,9 @@ class SessionTest extends PHPUnit_Framework_TestCase
 
         $this->assertImmutableSessionValues($session, 3);
 
-        $this->assertSame(
+        $this->assertSessionVariables(
             ['baz' => 'qux'],
-            $session->variables()
+            $session
         );
     }
 
@@ -369,9 +292,8 @@ class SessionTest extends PHPUnit_Framework_TestCase
 
         $this->assertImmutableSessionValues($session, 3);
 
-        $this->assertSame(
-            [],
-            $session->variables()
+        $this->assertTrue(
+            $session->variables()->isEmpty()
         );
     }
 
@@ -408,9 +330,8 @@ class SessionTest extends PHPUnit_Framework_TestCase
 
         $this->assertImmutableSessionValues($session, 3);
 
-        $this->assertSame(
-            [],
-            $session->variables()
+        $this->assertTrue(
+            $session->variables()->isEmpty()
         );
     }
 
@@ -441,6 +362,14 @@ class SessionTest extends PHPUnit_Framework_TestCase
         $this->assertSame(
             $this->constants,
             $session->constants()
+        );
+    }
+
+    private function assertSessionVariables(array $variables, Session $session)
+    {
+        $this->assertSame(
+            $variables,
+            iterator_to_array($session->variables())
         );
     }
 }

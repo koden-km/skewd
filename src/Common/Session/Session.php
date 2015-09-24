@@ -1,7 +1,7 @@
 <?php
 namespace Skewd\Common\Session;
 
-use LogicException;
+use Skewd\Common\Collection\AttributeCollection;
 
 /**
  * A session.
@@ -11,18 +11,18 @@ final class Session
     /**
      * Create a new session.
      *
-     * @param string                $id        The session ID.
-     * @param string                $owner     The owner of this session.
-     * @param array<string, string> $constants A set of constant key/value pairs associated with the session.
-     * @param array<string, string> $variables A set of variable key/value pairs associated with the session.
+     * @param string                   $id        The session ID.
+     * @param string                   $owner     The owner of this session.
+     * @param AttributeCollection|null $constants An attribute collection containing values that remain constant for the lifetime of the session.
+     * @param AttributeCollection|null $variables An attribute collection containing values that may change over the lifetime of the session.
      *
      * @return Session
      */
     public static function create(
         $id,
         $owner,
-        array $constants = [],
-        array $variables = []
+        AttributeCollection $constants = null,
+        AttributeCollection $variables = null
     ) {
         return new self(
             $id,
@@ -36,11 +36,11 @@ final class Session
     /**
      * Create a session with a specific version number.
      *
-     * @param string                $id         The session ID.
-     * @param string                $owner      The owner of this session.
-     * @param integer               $version    The session version.
-     * @param array<string, string> $constants A set of constant key/value pairs associated with the session.
-     * @param array<string, string> $variables A set of variable key/value pairs associated with the session.
+     * @param string                   $id        The session ID.
+     * @param string                   $owner     The owner of this session.
+     * @param integer                  $version   The session version.
+     * @param AttributeCollection|null $constants An attribute collection containing values that remain constant for the lifetime of the session.
+     * @param AttributeCollection|null $variables An attribute collection containing values that may change over the lifetime of the session.
      *
      * @return Session
      */
@@ -48,8 +48,8 @@ final class Session
         $id,
         $owner,
         $version,
-        array $constants = [],
-        array $variables = []
+        AttributeCollection $constants = null,
+        AttributeCollection $variables = null
     ) {
         return new self(
             $id,
@@ -98,7 +98,7 @@ final class Session
      * Constants are key/value pairs that CAN NOT change during the life-time of
      * the session.
      *
-     * @return array<string, string> The session constants.
+     * @return AttributeCollection The session constants.
      */
     public function constants()
     {
@@ -111,83 +111,11 @@ final class Session
      * Variables are key/value pairs that MAY change during the life-time of the
      * session.
      *
-     * @return array<string, string> The session's variables.
+     * @return AttributeCollection The session variables.
      */
     public function variables()
     {
         return $this->variables;
-    }
-
-    /**
-     * Get the value of a session variable.
-     *
-     * @param string $name The variable name.
-     *
-     * @return string         The variable value.
-     * @throws LogicException if the variable does not exist.
-     */
-    public function get($name)
-    {
-        if (array_key_exists($name, $this->variables)) {
-            return $this->variables[$name];
-        }
-
-        throw new LogicException(
-            sprintf(
-                'Session %s version %d does not contain a variable named %s.',
-                $this->id,
-                $this->version,
-                json_encode($name)
-            )
-        );
-    }
-
-    /**
-     * Get the value of a variable, if available.
-     *
-     * @param string $name   The variable name.
-     * @param string &$value Assigned the value of the variable, if present.
-     *
-     * @return boolean True if the variable is present; otherwise, false.
-     */
-    public function tryGet($name, &$value)
-    {
-        if (array_key_exists($name, $this->variables)) {
-            $value = $this->variables[$name];
-
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Get the value of a variable, or a default value if not present.
-     *
-     * @param string $name    The variable name.
-     * @param string $default The value to return if the variable is not present.
-     *
-     * @return mixed The variable value, or the default value.
-     */
-    public function safeGet($name, $default = '')
-    {
-        if (array_key_exists($name, $this->variables)) {
-            return $this->variables[$name];
-        }
-
-        return $default;
-    }
-
-    /**
-     * Check for the presence of a variable.
-     *
-     * @param string $name The variable name.
-     *
-     * @return boolean True if the variable is present; otherwise, false.
-     */
-    public function has($name)
-    {
-        return array_key_exists($name, $this->variables);
     }
 
     /**
@@ -200,24 +128,9 @@ final class Session
      */
     public function set($name, $value)
     {
-        if (
-            array_key_exists($name, $this->variables)
-            && $value === $this->variables[$name]
-        ) {
-            return $this;
-        }
-
-        if (!is_string($value)) {
-            throw new LogicException(
-                'Parameter values must be strings.'
-            );
-        }
-
-        $session = clone $this;
-        $session->version++;
-        $session->variables[$name] = $value;
-
-        return $session;
+        return $this->setVariables(
+            $this->variables->set($name, $value)
+        );
     }
 
     /**
@@ -229,31 +142,9 @@ final class Session
      */
     public function setMany(array $variables)
     {
-        $session = null;
-
-        foreach ($variables as $name => $value) {
-            if (
-                array_key_exists($name, $this->variables)
-                && $value === $this->variables[$name]
-            ) {
-                continue;
-            } elseif (!is_string($value)) {
-                throw new LogicException(
-                    'Parameter values must be strings.'
-                );
-            } elseif (null === $session) {
-                $session = clone $this;
-                $session->version++;
-            }
-
-            $session->variables[$name] = $value;
-        }
-
-        if ($session) {
-            return $session;
-        }
-
-        return $this;
+        return $this->setVariables(
+            $this->variables->setMany($variables)
+        );
     }
 
     /**
@@ -265,23 +156,9 @@ final class Session
      */
     public function replaceAll(array $variables)
     {
-        if ($this->variables === $variables) {
-            return $this;
-        }
-
-        foreach ($variables as $value) {
-            if (!is_string($value)) {
-                throw new LogicException(
-                    'Parameter values must be strings.'
-                );
-            }
-        }
-
-        $session = clone $this;
-        $session->version++;
-        $session->variables = $variables;
-
-        return $session;
+        return $this->setVariables(
+            $this->variables->replaceAll($variables)
+        );
     }
 
     /**
@@ -293,25 +170,9 @@ final class Session
      */
     public function remove(...$names)
     {
-        if (empty($this->variables)) {
-            return $this;
-        }
-
-        $variables = $this->variables;
-
-        foreach ($names as $name) {
-            unset($variables[$name]);
-        }
-
-        if (count($variables) === count($this->variables)) {
-            return $this;
-        }
-
-        $session = clone $this;
-        $session->version++;
-        $session->variables = $variables;
-
-        return $session;
+        return $this->setVariables(
+            $this->variables->remove(...$names)
+        );
     }
 
     /**
@@ -321,36 +182,48 @@ final class Session
      */
     public function clear()
     {
-        if (empty($this->variables)) {
-            return $this;
-        }
-
-        $session = clone $this;
-        $session->version++;
-        $session->variables = [];
-
-        return $session;
+        return $this->setVariables(
+            $this->variables->clear()
+        );
     }
 
     /**
-     * @param string                $id         The session ID.
-     * @param string                $owner      The owner of this session.
-     * @param integer               $version    The session version.
-     * @param array<string, string> $constants A set of constant key/value pairs associated with the session.
-     * @param array<string, string> $variables A set of variable key/value pairs associated with the session.
+     * @param string                   $id        The session ID.
+     * @param string                   $owner     The owner of this session.
+     * @param integer                  $version   The session version.
+     * @param AttributeCollection|null $constants An attribute collection containing values that remain constant for the lifetime of the session.
+     * @param AttributeCollection|null $variables An attribute collection containing values that may change over the lifetime of the session.
      */
     private function __construct(
         $id,
         $owner,
         $version,
-        array $constants,
-        array $variables
+        AttributeCollection $constants = null,
+        AttributeCollection $variables = null
     ) {
         $this->id = $id;
         $this->owner = $owner;
         $this->version = $version;
-        $this->constants = $constants;
-        $this->variables = $variables;
+        $this->constants = $constants ?: AttributeCollection::create();
+        $this->variables = $variables ?: AttributeCollection::create();
+    }
+
+    /**
+     * @param AttributeCollection
+     *
+     * @return Session
+     */
+    private function setVariables(AttributeCollection $variables)
+    {
+        if ($variables === $this->variables) {
+            return $this;
+        }
+
+        $session = clone $this;
+        $session->version++;
+        $session->variables = $variables;
+
+        return $session;
     }
 
     private $id;

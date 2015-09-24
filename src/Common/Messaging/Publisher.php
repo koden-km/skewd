@@ -9,7 +9,7 @@ interface Publisher
     /**
      * Enqueue a message to be sent directly to a single node.
      *
-     * @param string $nodeId The recipient node ID.
+     * @param string  $nodeId  The recipient node ID.
      * @param Message $message The message to send.
      */
     public function sendToNode($nodeId, Message $message);

@@ -118,7 +118,6 @@ final class SessionModule implements Module
 
     private function recvProperties(AMQPMessage $message)
     {
-
     }
 
     private $sessionStore;
