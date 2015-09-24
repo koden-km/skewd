@@ -78,7 +78,6 @@ final class ModularApplication implements Application
     {
         try {
             $this->connection = $this->connectionFactory->create();
-            $this->channel = $this->connection->channel();
         } catch (Exception $e) {
             $this->logger->critical(
                 'Failed to establish AMQP connection: {message}',
@@ -93,7 +92,9 @@ final class ModularApplication implements Application
 
         foreach ($this->modules as $module) {
             try {
-                $module->initialize($this, $this->channel);
+                $channel = $this->connection->channel();
+                $module->initialize($this, $channel);
+                $this->modules[$module] = $channel;
             } catch (Exception $e) {
                 $this->logger->critical(
                     'Failed to initialize module "{name}": {message}',
@@ -214,29 +215,35 @@ final class ModularApplication implements Application
     private function wait()
     {
         try {
-            $this->channel->wait(
-                null,  // allowed methods
-                false, // non-blocking
-                self::CHANNEL_WAIT_TIMEOUT
-            );
+            $this->connection->select(0, self::SELECT_TIMEOUT * 1000000);
         } catch (ErrorException $e) {
             if (false === strpos($e->getMessage(), 'Interrupted system call')) {
                 throw $e;
             }
 
             return true;
-        } catch (AMQPTimeoutException $e) {
-            // ignore ...
+        }
+
+        foreach ($this->modules as $module) {
+            try {
+                $this->modules[$module]->wait(
+                    null, // allowed methods
+                    true, // non-blocking
+                    self::CHANNEL_WAIT_TIMEOUT // timeout
+                );
+            } catch (AMQPTimeoutException $e) {
+                // ignore ...
+            }
         }
 
         return false;
     }
 
-    const CHANNEL_WAIT_TIMEOUT = 1;
+    const SELECT_TIMEOUT       = 0.1;
+    const CHANNEL_WAIT_TIMEOUT = 0.000001;
 
     private $connectionFactory;
     private $connection;
-    private $channel;
     private $logger;
     private $modules;
 }

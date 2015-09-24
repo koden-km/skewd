@@ -1,6 +1,8 @@
 <?php
 namespace Skewd\Common\Messaging;
 
+use Skewd\Common\Collection\AttributeCollection;
+
 /**
  * A unit of information that can be sent to other nodes.
  *
@@ -10,24 +12,28 @@ namespace Skewd\Common\Messaging;
 final class Message
 {
     /**
-     * @param mixed                $payload    The main message data.
-     * @param array<string,string> $properties Additional message properties.
+     * @param string                   $senderId   The ID of the node that is sending the message.
+     * @param mixed                    $payload    The main message data.
+     * @param AttributeCollection|null $properties Additional message properties.
      *
      * @return Message
      */
-    public static function create($payload, array $properties = [])
-    {
-        return new self($payload, $properties);
+    public static function create(
+        $senderId,
+        $payload,
+        AttributeCollection $properties = null
+    ) {
+        return new self($senderId, $payload, $properties);
     }
 
     /**
-     * Get the node ID of the sender.
+     * Get The ID of the node that is sending the message.
      *
-     * @return string The node ID of the sender.
+     * @return string The ID of the node that is sending the message.
      */
-    public function nodeId()
+    public function senderId()
     {
-        return $this->nodeId;
+        return $this->senderId;
     }
 
     /**
@@ -43,7 +49,7 @@ final class Message
     /**
      * Get the message's properties.
      *
-     * @return array<string,string> Additional message properties.
+     * @return AttributeCollection Additional message properties.
      */
     public function properties()
     {
@@ -51,18 +57,21 @@ final class Message
     }
 
     /**
-     * @param string               $nodeId     The node ID of the sender.
-     * @param mixed                $payload    The main message data.
-     * @param array<string,string> $properties Additional message properties.
+     * @param string                   $senderId   The ID of the node that is sending the message.
+     * @param mixed                    $payload    The main message data.
+     * @param AttributeCollection|null $properties Additional message properties.
      */
-    private function __construct($nodeId, $payload, array $properties = [])
-    {
-        $this->nodeId = $nodeId;
+    private function __construct(
+        $senderId,
+        $payload,
+        AttributeCollection $properties = null
+    ) {
+        $this->senderId = $senderId;
         $this->payload = $payload;
-        $this->properties = $properties;
+        $this->properties = $properties ?: AttributeCollection::create();
     }
 
-    private $nodeId;
+    private $senderId;
     private $payload;
     private $properties;
 }

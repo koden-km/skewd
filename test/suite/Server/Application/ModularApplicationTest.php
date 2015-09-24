@@ -16,8 +16,6 @@ class ModularApplicationTest extends PHPUnit_Framework_TestCase
 {
     public function setUp()
     {
-        $this->markTestSkipped();
-
         $this->connectionFactory = Phony::fullMock(ConnectionFactory::class);
         $this->logger = Phony::fullMock(LoggerInterface::class);
 
@@ -279,7 +277,7 @@ class ModularApplicationTest extends PHPUnit_Framework_TestCase
         $result = $this->subject->tick();
 
         Phony::inOrder(
-            $this->connection->select->calledWith(0, 10000),
+            $this->connection->select->calledWith(0, 100000),
             Phony::anyOrder(
                 $this->module1->tick->called(),
                 $this->module2->tick->called(),
