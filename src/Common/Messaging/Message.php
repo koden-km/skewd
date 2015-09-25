@@ -12,6 +12,8 @@ use Skewd\Common\Collection\AttributeCollection;
 final class Message
 {
     /**
+     * Create a message.
+     *
      * @param string                   $senderId   The ID of the node that is sending the message.
      * @param mixed                    $payload    The main message data.
      * @param AttributeCollection|null $properties Additional message properties.

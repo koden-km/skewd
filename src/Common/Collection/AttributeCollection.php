@@ -117,7 +117,7 @@ final class AttributeCollection implements IteratorAggregate
     /**
      * Set the value of an attribute.
      *
-     * Returns a new collection with the modified value.
+     * Returns a collection with the modified value.
      *
      * @param string $name  The attribute name.
      * @param string $value The attribute value.
@@ -145,7 +145,7 @@ final class AttributeCollection implements IteratorAggregate
     /**
      * Set the value of multiple attributes.
      *
-     * @param array<string, string> $attributes An associative array of new attribute values.
+     * @param array<string, string> $attributes An associative array of attribute values.
      *
      * @return AttributeCollection The updated collection.
      */
@@ -181,7 +181,7 @@ final class AttributeCollection implements IteratorAggregate
     /**
      * Replace all attributes with the given attributes.
      *
-     * @param array<string, string> $attributes An associative array of new attribute values.
+     * @param array<string, string> $attributes An associative array of attribute values.
      *
      * @return AttributeCollection The updated collection.
      */

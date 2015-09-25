@@ -11,8 +11,6 @@ use Psr\Log\LoggerInterface;
  */
 final class TickingProcess implements Process
 {
-    use IsolatorTrait;
-
     /**
      * @param TickingProcessAction $action The action to be performed by the process.
      * @param LoggerInterface      $logger The logger to use for process output.
@@ -174,6 +172,8 @@ final class TickingProcess implements Process
 
     const SLEEP_ON_ERROR = 5;
     const SLEEP_ON_TICK = 0;
+
+    use IsolatorTrait;
 
     private $action;
     private $logger;

@@ -5,14 +5,18 @@ use Eloquent\Phony\Phpunit\Phony;
 use Icecave\Isolator\Isolator;
 use PHPUnit_Framework_TestCase;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
+use PhpAmqpLib\Connection\AbstractConnection;
 
-class BasicConnectionFactoryTest extends PHPUnit_Framework_TestCase
+class StreamConnectorTest extends PHPUnit_Framework_TestCase
 {
     public function setUp()
     {
-        $this->isolator = Phony::fullMock(Isolator::class);
+        $this->connection = Phony::fullMock(AbstractConnection::class);
 
-        $this->subject = new BasicConnectionFactory(
+        $this->isolator = Phony::fullMock(Isolator::class);
+        $this->isolator->new->returns($this->connection->mock());
+
+        $this->subject = StreamConnector::create(
             '<host>',
             1234,
             '<username>',
@@ -23,11 +27,9 @@ class BasicConnectionFactoryTest extends PHPUnit_Framework_TestCase
         $this->subject->setIsolator($this->isolator->mock());
     }
 
-    public function testCreate()
+    public function testConnect()
     {
-        $this->isolator->new->returns('<instance>');
-
-        $result = $this->subject->create();
+        $result = $this->subject->connect();
 
         $this->isolator->new->calledWith(
             AMQPStreamConnection::class,
@@ -38,8 +40,8 @@ class BasicConnectionFactoryTest extends PHPUnit_Framework_TestCase
             '<vhost>'
         );
 
-        $this->assertEquals(
-            '<instance>',
+        $this->assertSame(
+            $this->connection->mock(),
             $result
         );
     }

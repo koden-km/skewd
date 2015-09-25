@@ -2,25 +2,47 @@
 namespace Skewd\Common\Messaging;
 
 /**
- * A node on the network.
+ * A node in a Skewd network.
  */
 interface Node
 {
     /**
-     * Get a publisher for the given domain.
+     * Get this node's unique ID.
      *
-     * @param string $domain The domain within which the publisher communicates.
+     * The node ID is only available when connected to an AMQP server.
      *
-     * @return Publisher The publisher.
+     * @return string|null The node ID if connected; otherwise, null.
      */
-    public function publisher($domain);
+    public function id();
 
     /**
-     * Get a subscriber for the given domain.
+     * Connect to the AMQP server.
      *
-     * @param string $domain The domain within which the subscriber communicates.
+     * If a connection has already been established it is first disconnected.
      *
-     * @return Subscriber The subscriber.
+     * @throws ConnectionException The connection could not be established.
      */
-    public function subscriber($domain);
+    public function connect();
+
+    /**
+     * Disconnect from the AMQP server.
+     *
+     * Disconnecting from the server invalidates all AMQP channels created for
+     * this node.
+     */
+    public function disconnect();
+
+    /**
+     * Check if there is currently a connection to the AMQP server.
+     *
+     * @return boolean True if currently connected; otherwise, false.
+     */
+    public function isConnected();
+
+    /**
+     * Create an AMQP channel.
+     *
+     * @return Channel The newly created channel.
+     */
+    public function createChannel();
 }

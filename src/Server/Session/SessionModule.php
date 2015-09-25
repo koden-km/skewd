@@ -14,8 +14,6 @@ use Skewd\Server\Application\Module;
  */
 final class SessionModule implements Module
 {
-    use AmqpDeclarationTrait;
-
     public function __construct(SessionStore $sessionStore)
     {
         $this->sessionStore = $sessionStore;
@@ -119,6 +117,8 @@ final class SessionModule implements Module
     private function recvProperties(AMQPMessage $message)
     {
     }
+
+    use AmqpDeclarationTrait;
 
     private $sessionStore;
     private $queue;

@@ -10,6 +10,8 @@ env:
   global:
     - ARCHER_PUBLISH_VERSION=5.6
 
+services:
+  - rabbitmq
 
 install:
   - ./.travis.install

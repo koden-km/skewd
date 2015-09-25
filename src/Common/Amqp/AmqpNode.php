@@ -1,56 +1,144 @@
 <?php
 namespace Skewd\Common\Amqp;
 
+use Icecave\Isolator\IsolatorTrait;
+use PhpAmqpLib\Exception\AMQPExceptionInterface;
+use Skewd\Common\Messaging\Channel;
+use Skewd\Common\Messaging\ConnectionException;
 use Skewd\Common\Messaging\Node;
 
+/**
+ * A node that uses "videlalvaro/php-amqplib" to communicate with an AMQP server.
+ */
 final class AmqpNode implements Node
 {
-    public function __construct(AMQPChannel $channel)
+    /**
+     * Create an AMQP node.
+     *
+     * @param Connector $connector The connector used to establish AMQP connections.
+     *
+     * @return AmqpNode
+     */
+    public static function create(Connector $connector)
     {
-        $this->channel = $channel;
-        $this->publishers = [];
-        $this->subscribers = [];
+        return new self($connector);
     }
 
     /**
-     * Get a publisher for the given domain.
+     * Get this node's unique ID.
      *
-     * @param string $domain The domain within which the publisher communicates.
+     * The node ID is only available when connected to an AMQP server.
      *
-     * @return Publisher The publisher.
+     * @return string|null The node ID if connected; otherwise, null.
      */
-    public function publisher($domain)
+    public function id()
     {
-        if (isset($this->publishers[$domain])) {
-            return $this->publishers[$domain];
+        if (null === $this->nodeId) {
+            return null;
+        } elseif ($this->connection->isConnected()) {
+            return $this->nodeId;
         }
 
-        $publisher = new AmqpPublisher($channel, $domain);
+        $this->nodeId = null;
 
-        $this->publishers[$domain] = $publisher;
-
-        return $publisher;
+        return null;
     }
 
     /**
-     * Get a subscriber for the given domain.
+     * Connect to the AMQP server.
      *
-     * @param string $domain The domain within which the subscriber communicates.
+     * If a connection has already been established it is first disconnected.
      *
-     * @return Subscriber The subscriber.
+     * @throws ConnectionException The connection could not be established.
      */
-    public function subscriber($domain)
+    public function connect()
     {
-        if (isset($this->subscribers[$domain])) {
-            return $this->subscribers[$domain];
+        $this->disconnect();
+
+        try {
+            $this->connection = $this->connector->connect();
+            $this->channel = $this->connection->channel();
+            list($this->nodeId) = $this->channel->queue_declare(
+                '',    // queue
+                false, // passive
+                false, // durable
+                true   // exclusive
+            );
+        } catch (AMQPExceptionInterface $e) {
+            $this->disconnect();
+
+            throw ConnectionException::create($e);
         }
-
-        $subscriber = new AmqpSubscriber($channel, $domain);
-
-        $this->subscribers[$domain] = $subscriber;
-
-        return $subscriber;
     }
 
+    /**
+     * Disconnect from the AMQP server.
+     */
+    public function disconnect()
+    {
+        try {
+            if ($this->connection) {
+                $this->connection->close();
+            }
+        } catch (AMQPExceptionInterface $e) {
+            // ignore ...
+        } finally {
+            $this->connection = null;
+            $this->channel = null;
+            $this->nodeId = null;
+        }
+    }
+
+    /**
+     * Check if there is currently a connection to the AMQP server.
+     *
+     * @return boolean True if currently connected; otherwise, false.
+     */
+    public function isConnected()
+    {
+        if ($this->connection) {
+            return $this->connection->isConnected();
+        }
+
+        return false;
+    }
+
+    /**
+     * Create an AMQP channel.
+     *
+     * @return Channel The newly created channel.
+     */
+    public function createChannel()
+    {
+        return $this->isolator()->new(
+            AmqpChannel::class,
+            $this->connection->channel()
+        );
+    }
+
+    /**
+     * Please note that this code is not part of the public API. It may be
+     * changed or removed at any time without notice.
+     *
+     * @access private
+     *
+     * This constructor is public so that it may be used by auto-wiring
+     * dependency injection containers. If you are explicitly constructing an
+     * instance please use one of the static factory methods listed below.
+     *
+     * @see AmqpNode::create()
+     *
+     * @param Connector $connector The connector used to establish AMQP connections.
+     */
+    public function __construct(Connector $connector)
+    {
+        $this->connector = $connector;
+    }
+
+    use IsolatorTrait;
+
+    private $connector;
+    private $connection;
     private $channel;
+    private $nodeId;
 }

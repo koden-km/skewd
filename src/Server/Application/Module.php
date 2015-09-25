@@ -1,10 +1,8 @@
 <?php
 namespace Skewd\Server\Application;
 
-use PhpAmqpLib\Channel\AMQPChannel;
-
 /**
- * A module provides functionality to an modular application.
+ * A module provides functionality to a modular application.
  */
 interface Module
 {
@@ -28,12 +26,9 @@ interface Module
      * The module MUST allow repeat calls to tick() once initialize() has
      * completed successfully.
      *
-     * @param Application $application The application under which the module is executing.
-     * @param AMQPChannel $channel     A private AMQP channel for use by this module.
-     *
      * @throws Exception if the module can not be initialized.
      */
-    public function initialize(Application $application, AMQPChannel $channel);
+    public function initialize();
 
     /**
      * Shutdown the module.

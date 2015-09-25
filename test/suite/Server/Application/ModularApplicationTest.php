@@ -16,6 +16,8 @@ class ModularApplicationTest extends PHPUnit_Framework_TestCase
 {
     public function setUp()
     {
+        $this->markTestSkipped();
+
         $this->connectionFactory = Phony::fullMock(ConnectionFactory::class);
         $this->logger = Phony::fullMock(LoggerInterface::class);
 

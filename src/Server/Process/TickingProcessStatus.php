@@ -4,7 +4,8 @@ namespace Skewd\Server\Process;
 use Eloquent\Enumeration\AbstractEnumeration;
 
 /**
- * *** THIS TYPE IS NOT PART OF THE PUBLIC API ***
+ * Please note that this code is not part of the public API. It may be changed
+ * or removed at any time without notice.
  *
  * @access private
  */

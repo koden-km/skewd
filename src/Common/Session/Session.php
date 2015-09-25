@@ -9,7 +9,7 @@ use Skewd\Common\Collection\AttributeCollection;
 final class Session
 {
     /**
-     * Create a new session.
+     * Create a session.
      *
      * @param string                   $id        The session ID.
      * @param string                   $owner     The owner of this session.
@@ -136,7 +136,7 @@ final class Session
     /**
      * Set the value of multiple variables.
      *
-     * @param array<string, string> $variables An associative array of new variable values.
+     * @param array<string, string> $variables An associative array of variable values.
      *
      * @return Session The updated session.
      */
@@ -150,7 +150,7 @@ final class Session
     /**
      * Replace all variables with the given variables.
      *
-     * @param array<string, string> $variables An associative array of new variable values.
+     * @param array<string, string> $variables An associative array of variable values.
      *
      * @return Session The updated session.
      */

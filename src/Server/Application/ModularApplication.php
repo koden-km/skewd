@@ -6,7 +6,6 @@ use Exception;
 use LogicException;
 use PhpAmqpLib\Exception\AMQPTimeoutException;
 use Psr\Log\LoggerInterface;
-use Skewd\Common\Amqp\ConnectionFactory;
 use Skewd\Server\Process\Process;
 use SplObjectStorage;
 
@@ -15,18 +14,6 @@ use SplObjectStorage;
  */
 final class ModularApplication implements Application
 {
-    /**
-     * @param LoggerInterface $logger The logger to use for application output.
-     */
-    public function __construct(
-        ConnectionFactory $connectionFactory,
-        LoggerInterface $logger
-    ) {
-        $this->connectionFactory = $connectionFactory;
-        $this->logger = $logger;
-        $this->clear();
-    }
-
     /**
      * Add a module to the collection.
      *
@@ -239,11 +226,22 @@ final class ModularApplication implements Application
         return false;
     }
 
+    /**
+     * @param Node            $node   The node.
+     * @param LoggerInterface $logger The logger to use for application output.
+     */
+    public function __construct(Node $node, LoggerInterface $logger)
+    {
+        $this->node = $node;
+        $this->logger = $logger;
+
+        $this->clear();
+    }
+
     const SELECT_TIMEOUT       = 0.1;
     const CHANNEL_WAIT_TIMEOUT = 0.000001;
 
-    private $connectionFactory;
-    private $connection;
+    private $node;
     private $logger;
     private $modules;
 }
