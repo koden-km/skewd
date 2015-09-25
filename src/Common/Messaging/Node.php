@@ -45,4 +45,13 @@ interface Node
      * @return Channel The newly created channel.
      */
     public function createChannel();
+
+    /**
+     * Wait for network activity.
+     *
+     * @param integer|float $timeout The number of seconds to wait for technology.
+     *
+     * @return boolean True if the operation was interrupted by a signal; otherwise, false.
+     */
+    public function wait($timeout);
 }

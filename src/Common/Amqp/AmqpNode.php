@@ -117,6 +117,18 @@ final class AmqpNode implements Node
     }
 
     /**
+     * Wait for network activity.
+     *
+     * @param integer|float $timeout The number of seconds to wait for technology.
+     *
+     * @return boolean True if the operation was interrupted by a signal; otherwise, false.
+     */
+    public function wait($timeout)
+    {
+        throw new \LogicException('Not implemented.');
+    }
+
+    /**
      * Please note that this code is not part of the public API. It may be
      * changed or removed at any time without notice.
      *

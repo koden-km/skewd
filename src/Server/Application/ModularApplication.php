@@ -1,19 +1,30 @@
 <?php
 namespace Skewd\Server\Application;
 
-use ErrorException;
 use Exception;
-use LogicException;
-use PhpAmqpLib\Exception\AMQPTimeoutException;
 use Psr\Log\LoggerInterface;
+use Skewd\Common\Messaging\Node;
 use Skewd\Server\Process\Process;
 use SplObjectStorage;
 
 /**
- * A modular application centered around a single AMQP connection.
+ * An application with functionality composed of modules.
  */
 final class ModularApplication implements Application
 {
+    /**
+     * Create a modular application.
+     *
+     * @param Node            $node   The messaging node used for communication.
+     * @param LoggerInterface $logger The logger to use for application output.
+     *
+     * @return ModularApplication
+     */
+    public static function create(Node $node, LoggerInterface $logger)
+    {
+        return new self($node, $logger);
+    }
+
     /**
      * Add a module to the collection.
      *
@@ -64,10 +75,10 @@ final class ModularApplication implements Application
     public function initialize(Process $process)
     {
         try {
-            $this->connection = $this->connectionFactory->create();
+            $this->node->connect();
         } catch (Exception $e) {
             $this->logger->critical(
-                'Failed to establish AMQP connection: {message}',
+                'Node failed to establish an AMQP connection: {message}',
                 [
                     'message' => $e->getMessage(),
                     'exception' => $e,
@@ -77,11 +88,14 @@ final class ModularApplication implements Application
             return false;
         }
 
+        $this->logger->info(
+            'Node initialized, node ID is {id}',
+            ['id' => $this->node->id()]
+        );
+
         foreach ($this->modules as $module) {
             try {
-                $channel = $this->connection->channel();
-                $module->initialize($this, $channel);
-                $this->modules[$module] = $channel;
+                $module->initialize($this->node);
             } catch (Exception $e) {
                 $this->logger->critical(
                     'Failed to initialize module "{name}": {message}',
@@ -125,25 +139,18 @@ final class ModularApplication implements Application
             }
         }
 
-        if ($this->connection) {
-            try {
-                if ($this->connection->isConnected()) {
-                    $this->connection->close();
-                }
-            } catch (Exception $e) {
-                $this->logger->warning(
-                    'Failed to close AMQP connection gracefully: {message}',
-                    [
-                        'message' => $e->getMessage(),
-                        'exception' => $e,
-                    ]
-                );
+        try {
+            $this->node->disconnect();
+        } catch (Exception $e) {
+            $this->logger->warning(
+                'Node failed to disconnect from AMQP gracefully: {message}',
+                [
+                    'message' => $e->getMessage(),
+                    'exception' => $e,
+                ]
+            );
 
-                $result = false;
-            } finally {
-                $this->connection = null;
-                $this->channel = null;
-            }
+            $result = false;
         }
 
         return $result;
@@ -156,17 +163,13 @@ final class ModularApplication implements Application
      */
     public function tick()
     {
-        if (!$this->connection) {
-            throw new LogicException('Application has not been initialized.');
-        }
-
         try {
-            if ($this->wait()) {
+            if ($this->node->wait(self::WAIT_TIMEOUT)) {
                 return true;
             }
         } catch (Exception $e) {
             $this->logger->critical(
-                'Failure while waiting for AMQP connection: {message}',
+                'Node failed while waiting for activity: {message}',
                 [
                     'message' => $e->getMessage(),
                     'exception' => $e,
@@ -197,36 +200,17 @@ final class ModularApplication implements Application
     }
 
     /**
-     * @return boolean True if the select was interrupted by a system call.
-     */
-    private function wait()
-    {
-        try {
-            $this->connection->select(0, self::SELECT_TIMEOUT * 1000000);
-        } catch (ErrorException $e) {
-            if (false === strpos($e->getMessage(), 'Interrupted system call')) {
-                throw $e;
-            }
-
-            return true;
-        }
-
-        foreach ($this->modules as $module) {
-            try {
-                $this->modules[$module]->wait(
-                    null, // allowed methods
-                    true, // non-blocking
-                    self::CHANNEL_WAIT_TIMEOUT // timeout
-                );
-            } catch (AMQPTimeoutException $e) {
-                // ignore ...
-            }
-        }
-
-        return false;
-    }
-
-    /**
+     * Please note that this code is not part of the public API. It may be
+     * changed or removed at any time without notice.
+     *
+     * @access private
+     *
+     * This constructor is public so that it may be used by auto-wiring
+     * dependency injection containers. If you are explicitly constructing an
+     * instance please use one of the static factory methods listed below.
+     *
+     * @see ModularApplication::create()
+     *
      * @param Node            $node   The node.
      * @param LoggerInterface $logger The logger to use for application output.
      */
@@ -238,8 +222,7 @@ final class ModularApplication implements Application
         $this->clear();
     }
 
-    const SELECT_TIMEOUT       = 0.1;
-    const CHANNEL_WAIT_TIMEOUT = 0.000001;
+    const WAIT_TIMEOUT = 0.1;
 
     private $node;
     private $logger;
