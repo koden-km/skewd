@@ -3,6 +3,7 @@ namespace Skewd\Common\Amqp;
 
 use Icecave\Isolator\IsolatorTrait;
 use PhpAmqpLib\Exception\AMQPExceptionInterface;
+use PhpAmqpLib\Exception\AMQPProtocolChannelException;
 use Skewd\Common\Messaging\Channel;
 use Skewd\Common\Messaging\ConnectionException;
 use Skewd\Common\Messaging\Node;
@@ -57,13 +58,7 @@ final class AmqpNode implements Node
 
         try {
             $this->connection = $this->connector->connect();
-            $this->channel = $this->connection->channel();
-            list($this->nodeId) = $this->channel->queue_declare(
-                '',    // queue
-                false, // passive
-                false, // durable
-                true   // exclusive
-            );
+            $this->nodeId = $this->generateNodeId();
         } catch (AMQPExceptionInterface $e) {
             $this->disconnect();
 
@@ -125,7 +120,9 @@ final class AmqpNode implements Node
      */
     public function wait($timeout)
     {
-        throw new \LogicException('Not implemented.');
+        @usleep(intval($timeout * 1000000));
+
+        return false;
     }
 
     /**
@@ -147,10 +144,67 @@ final class AmqpNode implements Node
         $this->connector = $connector;
     }
 
+    /**
+     * Generate a unique ID for this node.
+     *
+     * @return string
+     */
+    private function generateNodeId()
+    {
+        $iso = $this->isolator();
+        $previous = [];
+
+        while (true) {
+            // Generate a 4-byte random ID ...
+            do {
+                $id = sprintf(
+                    '%04x',
+                    $id = $iso->mt_rand(
+                        0,
+                        $iso->mt_getrandmax() & 0xffff
+                    )
+                );
+            } while (isset($previous[$id]))
+
+            $previous[$id] = true;
+
+            // Create a new AMQP channel ...
+            $channel = $this->connection->channel();
+
+            try {
+                // Attempt to create an exclusive queue based on the randomly
+                // generated unique ID ...
+                $channel->queue_declare(
+                    'node-' . $id,
+                    false, // passive
+                    false, // durable
+                    true   // exclusive
+                );
+
+                return $id;
+            } catch (AMQPProtocolChannelException $e) {
+                // The error is NOT about the queue (and hence the ID) being
+                // unavailable, simply re-throw the exception ...
+                if ($e->getCode() !== self::AMQP_RESOURCE_LOCKED_CODE) {
+                    throw $e;
+
+                // The error indicates the ID is unavailable, throw an exception
+                // if we've exhausted our attempts ...
+                } elseif (0 === --$remainingAttempts) {
+                    throw ConnectionException::create($e);
+                }
+            } finally {
+                $channel->close();
+            }
+        }
+    }
+
+    const AMQP_RESOURCE_LOCKED_CODE = 405;
+    const MAX_ID_GENERATION_ATTEMPTS = 5;
+
     use IsolatorTrait;
 
     private $connector;
     private $connection;
-    private $channel;
     private $nodeId;
 }

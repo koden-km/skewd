@@ -1,6 +1,8 @@
 <?php
 namespace Skewd\Server\Application;
 
+use Skewd\Common\Messaging\Node;
+
 /**
  * A module provides functionality to a modular application.
  */
@@ -26,9 +28,11 @@ interface Module
      * The module MUST allow repeat calls to tick() once initialize() has
      * completed successfully.
      *
+     * @param Node $node The node to use for communication.
+     *
      * @throws Exception if the module can not be initialized.
      */
-    public function initialize();
+    public function initialize(Node $node);
 
     /**
      * Shutdown the module.
