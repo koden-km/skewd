@@ -1,7 +1,6 @@
 <?php
 namespace Skewd\Common\Amqp;
 
-use Icecave\Isolator\IsolatorTrait;
 use PhpAmqpLib\Connection\AMQPConnection;
 use PhpAmqpLib\Connection\AbstractConnection;
 use PhpAmqpLib\Exception\AMQPExceptionInterface;
@@ -111,8 +110,7 @@ final class AmqpNode implements Node
      */
     public function createChannel()
     {
-        return $this->isolator()->new(
-            AmqpChannel::class,
+        return new AmqpChannel(
             $this->connection->channel()
         );
     }
@@ -193,8 +191,6 @@ final class AmqpNode implements Node
 
     const RESERVATION_ATTEMPTS = 5;
     const AMQP_RESOURCE_LOCKED_CODE = 405;
-
-    use IsolatorTrait;
 
     /**
      * @var Connector The connector used to establish AMQP connections.

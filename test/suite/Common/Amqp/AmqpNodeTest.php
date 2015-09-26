@@ -4,7 +4,7 @@ namespace Skewd\Common\Amqp;
 use Eloquent\Phony\Phpunit\Phony;
 use Exception;
 use PHPUnit_Framework_TestCase;
-use PhpAmqpLib\Channel\AMQPChannel;
+use PhpAmqpLib\Channel\AMQPChannel as AMQPChannelImpl;
 use PhpAmqpLib\Connection\AbstractConnection;
 use PhpAmqpLib\Exception\AMQPExceptionInterface;
 use Skewd\Common\Messaging\ConnectionException;
@@ -14,11 +14,11 @@ class AmqpNodeTest extends PHPUnit_Framework_TestCase
 {
     public function setUp()
     {
-        $this->channelA = Phony::fullMock(AMQPChannel::class);
-        $this->channelB = Phony::fullMock(AMQPChannel::class);
-        $this->channelC = Phony::fullMock(AMQPChannel::class);
-        $this->channelD = Phony::fullMock(AMQPChannel::class);
-        $this->channelE = Phony::fullMock(AMQPChannel::class);
+        $this->channelA = Phony::fullMock(AMQPChannelImpl::class);
+        $this->channelB = Phony::fullMock(AMQPChannelImpl::class);
+        $this->channelC = Phony::fullMock(AMQPChannelImpl::class);
+        $this->channelD = Phony::fullMock(AMQPChannelImpl::class);
+        $this->channelE = Phony::fullMock(AMQPChannelImpl::class);
 
         $this->connection = Phony::fullMock(AbstractConnection::class);
         $this->connection->isConnected->returns(true);
@@ -250,5 +250,22 @@ class AmqpNodeTest extends PHPUnit_Framework_TestCase
         $this->assertFalse(
             $this->subject->isConnected()
         );
+    }
+
+    public function testCreateChannel()
+    {
+        $this->subject->connect();
+
+        $channel = new AmqpChannel($this->channelB->mock());
+
+        $this->assertEquals(
+            $channel,
+            $this->subject->createChannel()
+        );
+    }
+
+    public function testWait()
+    {
+        $this->markTestIncomplete();
     }
 }

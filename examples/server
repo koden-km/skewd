@@ -16,5 +16,5 @@ $app = ModularApplication::create(
     $logger
 );
 
-$process = new TickingProcess($app, $logger);
-$process->start();
+TickingProcess::create($app, $logger)->start();
+

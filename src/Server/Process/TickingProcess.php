@@ -12,16 +12,18 @@ use Psr\Log\LoggerInterface;
 final class TickingProcess implements Process
 {
     /**
+     * Creating a ticking process.
+     *
      * @param TickingProcessAction $action The action to be performed by the process.
      * @param LoggerInterface      $logger The logger to use for process output.
+     *
+     * @return TickingProcess
      */
-    public function __construct(
+    public static function create(
         TickingProcessAction $action,
         LoggerInterface $logger
     ) {
-        $this->action = $action;
-        $this->logger = $logger;
-        $this->status = TickingProcessStatus::STOPPED();
+        return new self($action, $logger);
     }
 
     /**
@@ -104,6 +106,30 @@ final class TickingProcess implements Process
         if (TickingProcessStatus::STOPPED() !== $this->status) {
             $this->transition(TickingProcessStatus::RESTARTING());
         }
+    }
+
+    /**
+     * Please note that this code is not part of the public API. It may be
+     * changed or removed at any time without notice.
+     *
+     * @access private
+     *
+     * This constructor is public so that it may be used by auto-wiring
+     * dependency injection containers. If you are explicitly constructing an
+     * instance please use one of the static factory methods listed below.
+     *
+     * @see TickingProcess::create()
+     *
+     * @param TickingProcessAction $action The action to be performed by the process.
+     * @param LoggerInterface      $logger The logger to use for process output.
+     */
+    public function __construct(
+        TickingProcessAction $action,
+        LoggerInterface $logger
+    ) {
+        $this->action = $action;
+        $this->logger = $logger;
+        $this->status = TickingProcessStatus::STOPPED();
     }
 
     /**

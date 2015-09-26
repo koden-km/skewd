@@ -30,7 +30,7 @@ class TickingProcessTest extends PHPUnit_Framework_TestCase
                 }
             );
 
-        $this->subject = new TickingProcess(
+        $this->subject = TickingProcess::create(
             $this->action->mock(),
             $this->logger->mock()
         );
