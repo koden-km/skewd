@@ -2,11 +2,14 @@
 namespace Skewd\Common\Amqp;
 
 use Icecave\Isolator\IsolatorTrait;
+use PhpAmqpLib\Connection\AMQPConnection;
+use PhpAmqpLib\Connection\AbstractConnection;
 use PhpAmqpLib\Exception\AMQPExceptionInterface;
-use PhpAmqpLib\Exception\AMQPProtocolChannelException;
 use Skewd\Common\Messaging\Channel;
 use Skewd\Common\Messaging\ConnectionException;
+use Skewd\Common\Messaging\HexNodeIdGenerator;
 use Skewd\Common\Messaging\Node;
+use Skewd\Common\Messaging\NodeIdGenerator;
 
 /**
  * A node that uses "videlalvaro/php-amqplib" to communicate with an AMQP server.
@@ -16,13 +19,16 @@ final class AmqpNode implements Node
     /**
      * Create an AMQP node.
      *
-     * @param Connector $connector The connector used to establish AMQP connections.
+     * @param Connector            $connector       The connector used to establish AMQP connections.
+     * @param NodeIdGenerator|null $nodeIdGenerator The ID generator to use upon connection.
      *
      * @return AmqpNode
      */
-    public static function create(Connector $connector)
-    {
-        return new self($connector);
+    public static function create(
+        Connector $connector,
+        NodeIdGenerator $nodeIdGenerator = null
+    ) {
+        return new self($connector, $nodeIdGenerator);
     }
 
     /**
@@ -57,13 +63,14 @@ final class AmqpNode implements Node
         $this->disconnect();
 
         try {
-            $this->connection = $this->connector->connect();
-            $this->nodeId = $this->generateNodeId();
+            $connection = $this->connector->connect();
+            $nodeId = $this->generateNodeId($connection);
         } catch (AMQPExceptionInterface $e) {
-            $this->disconnect();
-
             throw ConnectionException::create($e);
         }
+
+        $this->connection = $connection;
+        $this->nodeId = $nodeId;
     }
 
     /**
@@ -72,14 +79,13 @@ final class AmqpNode implements Node
     public function disconnect()
     {
         try {
-            if ($this->connection) {
+            if (!$this->connection) {
+                return;
+            } elseif ($this->connection->isConnected()) {
                 $this->connection->close();
             }
-        } catch (AMQPExceptionInterface $e) {
-            // ignore ...
         } finally {
             $this->connection = null;
-            $this->channel = null;
             $this->nodeId = null;
         }
     }
@@ -137,43 +143,32 @@ final class AmqpNode implements Node
      *
      * @see AmqpNode::create()
      *
-     * @param Connector $connector The connector used to establish AMQP connections.
+     * @param Connector            $connector       The connector used to establish AMQP connections.
+     * @param NodeIdGenerator|null $nodeIdGenerator The ID generator to use upon connection.
      */
-    public function __construct(Connector $connector)
-    {
+    public function __construct(
+        Connector $connector,
+        NodeIdGenerator $nodeIdGenerator = null
+    ) {
         $this->connector = $connector;
+        $this->nodeIdGenerator = $nodeIdGenerator ?: HexNodeIdGenerator::create();
     }
 
     /**
-     * Generate a unique ID for this node.
+     * Generate and reserve an ID for use by this node.
      *
-     * @return string
+     * @param AbstractConnection $connection
+     *
+     * @return string The node ID.
      */
-    private function generateNodeId()
+    private function generateNodeId(AbstractConnection $connection)
     {
-        $iso = $this->isolator();
-        $previous = [];
+        $ids = $this->nodeIdGenerator->generate(self::RESERVATION_ATTEMPTS);
 
-        while (true) {
-            // Generate a 4-byte random ID ...
-            do {
-                $id = sprintf(
-                    '%04x',
-                    $id = $iso->mt_rand(
-                        0,
-                        $iso->mt_getrandmax() & 0xffff
-                    )
-                );
-            } while (isset($previous[$id]))
-
-            $previous[$id] = true;
-
-            // Create a new AMQP channel ...
-            $channel = $this->connection->channel();
+        foreach ($ids as $id) {
+            $channel = $connection->channel();
 
             try {
-                // Attempt to create an exclusive queue based on the randomly
-                // generated unique ID ...
                 $channel->queue_declare(
                     'node-' . $id,
                     false, // passive
@@ -182,29 +177,42 @@ final class AmqpNode implements Node
                 );
 
                 return $id;
-            } catch (AMQPProtocolChannelException $e) {
-                // The error is NOT about the queue (and hence the ID) being
-                // unavailable, simply re-throw the exception ...
+            } catch (AMQPExceptionInterface $e) {
+                // Immediately re-throw the error if it is anything other than
+                // a failure to acquire the exclusive queue ...
                 if ($e->getCode() !== self::AMQP_RESOURCE_LOCKED_CODE) {
-                    throw $e;
-
-                // The error indicates the ID is unavailable, throw an exception
-                // if we've exhausted our attempts ...
-                } elseif (0 === --$remainingAttempts) {
-                    throw ConnectionException::create($e);
+                    break;
                 }
             } finally {
                 $channel->close();
             }
         }
-    }
 
+        throw $e;
+    } // @codeCoverageIgnore
+
+    const RESERVATION_ATTEMPTS = 5;
     const AMQP_RESOURCE_LOCKED_CODE = 405;
-    const MAX_ID_GENERATION_ATTEMPTS = 5;
 
     use IsolatorTrait;
 
+    /**
+     * @var Connector The connector used to establish AMQP connections.
+     */
     private $connector;
+
+    /**
+     * @var $nodeIdGenerator The ID generator to use upon connection.
+     */
+    private $nodeIdGenerator;
+
+    /**
+     * @var AMQPConnection|null The current AMQP connection, or null if disconnected.
+     */
     private $connection;
+
+    /**
+     * @var string|null The node's ID, or null if disconnected.
+     */
     private $nodeId;
 }
