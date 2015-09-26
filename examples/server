@@ -9,12 +9,16 @@ use Skewd\Common\Amqp\AmqpNode;
 use Skewd\Common\Amqp\StreamConnector;
 use Skewd\Server\Application\ModularApplication;
 use Skewd\Server\Process\TickingProcess;
+use Skewd\Server\Session\SessionModule;
 
 $logger = new Logger;
+
 $app = ModularApplication::create(
     AmqpNode::create(StreamConnector::create()),
     $logger
 );
+
+$app->add(SessionModule::create());
 
 TickingProcess::create($app, $logger)->start();
 

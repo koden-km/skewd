@@ -1,10 +1,8 @@
 <?php
 namespace Skewd\Server\Session;
 
-use PhpAmqpLib\Channel\AMQPChannel;
-use PhpAmqpLib\Message\AMQPMessage;
-use Skewd\Common\Session\AmqpDeclarationTrait;
-use Skewd\Common\Session\AnnounceMessage;
+use Skewd\Common\Messaging\Node;
+use Skewd\Common\Session\InMemorySessionStore;
 use Skewd\Common\Session\SessionStore;
 use Skewd\Server\Application\Application;
 use Skewd\Server\Application\Module;
@@ -14,10 +12,11 @@ use Skewd\Server\Application\Module;
  */
 final class SessionModule implements Module
 {
-    public function __construct(SessionStore $sessionStore)
+    public static function create(SessionStore $sessionStore = null)
     {
-        $this->sessionStore = $sessionStore;
+        return new self($sessionStore);
     }
+
     /**
      * Get the name of the module.
      *
@@ -41,21 +40,13 @@ final class SessionModule implements Module
      * The module MUST allow repeat calls to tick() once initialize() has
      * completed successfully.
      *
-     * @param Application $application The application under which the module is executing.
-     * @param AMQPChannel $channel     A private AMQP channel for use by this module.
+     * @param Node $node The node to use for communication.
      *
      * @throws Exception if the module can not be initialized.
      */
-    public function initialize(Application $application, AMQPChannel $channel)
+    public function initialize(Node $node)
     {
         $this->sessionStore->clear();
-
-        $this->queue = $this->exclusiveQueue(
-            $channel,
-            function ($message) {
-                $this->recv($message);
-            }
-        );
     }
 
     /**
@@ -73,6 +64,7 @@ final class SessionModule implements Module
      */
     public function shutdown()
     {
+        $this->sessionStore->clear();
     }
 
     /**
@@ -94,32 +86,10 @@ final class SessionModule implements Module
     {
     }
 
-    private function recv(AMQPMessage $message)
+    public function __construct(SessionStore $sessionStore = null)
     {
-        $routingKey = $message->get('routing_key');
-
-        if ('announce' === $routingKey) {
-            $this->recvAnnounce($message);
-        } elseif ('properties' === $routingKey) {
-            $this->recvProperties($message);
-        }
+        $this->sessionStore = $sessionStore ?: InMemorySessionStore::create();
     }
-
-    private function recvAnnounce(AMQPMessage $amqpMessage)
-    {
-        $message = AnnounceMessage::fromAmqpMessage($amqpMessage);
-
-        $this->sessionStore->update(
-            $message->toSession()
-        );
-    }
-
-    private function recvProperties(AMQPMessage $message)
-    {
-    }
-
-    use AmqpDeclarationTrait;
 
     private $sessionStore;
-    private $queue;
 }

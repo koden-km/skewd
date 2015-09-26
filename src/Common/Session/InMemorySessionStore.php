@@ -7,6 +7,16 @@ namespace Skewd\Common\Session;
 final class InMemorySessionStore implements SessionStore
 {
     /**
+     * Create an in-memory session store.
+     *
+     * @return InMemorySessionStore
+     */
+    public static function create()
+    {
+        return new self();
+    }
+
+    /**
      * Store a session in the store.
      *
      * @param Session $session The session to store.
@@ -75,5 +85,20 @@ final class InMemorySessionStore implements SessionStore
         $this->sessions = [];
     }
 
-    private $sessions = [];
+    /**
+     * Please note that this code is not part of the public API. It may be
+     * changed or removed at any time without notice.
+     *
+     * @access private
+     *
+     * This constructor is public so that it may be used by auto-wiring
+     * dependency injection containers. If you are explicitly constructing an
+     * instance please use one of the static factory methods listed below.
+     *
+     * @see InMemorySessionStore::create()
+     */
+    public function __construct()
+    {
+        $this->sessions = [];
+    }
 }
