@@ -23,7 +23,7 @@ final class HexNodeIdGenerator implements NodeIdGenerator
     /**
      * Generate random node IDs.
      *
-     * @param integer $count The number of IDs to generate.
+     * @param integer $count The number of unique IDs to generate.
      *
      * @return array<string> The generated IDs.
      */
