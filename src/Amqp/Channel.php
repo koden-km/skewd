@@ -70,7 +70,7 @@ interface Channel
     /**
      * Close the channel.
      *
-     * Closing a channel invalides all exchanges and queues objects created via
+     * Closing a channel invalidates all exchanges and queues objects created via
      * this channel instance. It does not necessarily remove those resources on
      * the server.
      */
