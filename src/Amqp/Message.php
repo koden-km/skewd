@@ -54,9 +54,9 @@ final class Message
      *
      * @return AttributeCollection Application-specific message properties.
      */
-    public function customerProperties()
+    public function customProperties()
     {
-        return $this->customerProperties;
+        return $this->customProperties;
     }
 
     /**
@@ -71,7 +71,7 @@ final class Message
     ) {
         $this->payload = $payload;
         $this->amqpProperties = $amqpProperties ?: AttributeCollection::create();
-        $this->customerProperties = $customerProperties ?: AttributeCollection::create();
+        $this->customProperties = $customProperties ?: AttributeCollection::create();
     }
 
     private $payload;
