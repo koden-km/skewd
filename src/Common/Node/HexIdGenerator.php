@@ -1,12 +1,12 @@
 <?php
-namespace Skewd\Common\Messaging;
+namespace Skewd\Common\Node;
 
 use Icecave\Isolator\IsolatorTrait;
 
 /**
  * Generates random hexadecimal strings suitable for use as node IDs.
  */
-final class HexNodeIdGenerator implements NodeIdGenerator
+final class HexIdGenerator implements NodeIdGenerator
 {
     /**
      * Create a hex node ID generator.

@@ -1,10 +1,10 @@
 <?php
-namespace Skewd\Common\Messaging;
+namespace Skewd\Common\Node;
 
 /**
  * Generate random values suitable for use as node IDs.
  */
-interface NodeIdGenerator
+interface IdGenerator
 {
     /**
      * Generate random node IDs.

@@ -1,0 +1,38 @@
+#!/usr/bin/env php
+<?php
+require __DIR__ . '/../vendor/autoload.php';
+
+Eloquent\Asplode\Asplode::install();
+
+use Icecave\Stump\Logger;
+use Skewd\Amqp\ExchangeType;
+use Skewd\Amqp\PhpAmqpLib\PhpAmqpLibConnector;
+
+$connector = PhpAmqpLibConnector::create();
+$connection = $connector->connect();
+
+$channel = $connection->channel();
+
+$exchange = $channel->defaultExchange();
+
+$queue = $channel->queue();
+
+
+
+
+sleep(30);
+
+// $logger = new Logger;
+// $connector = StreamConnector::create();
+// $connection = $connector->connect();
+// $channel = $connection->channel();
+// $lockManager = AmqpLockManager::create($channel, $logger);
+
+// try {
+//     $lock = $lockManager->lock('foo');
+//     echo 'Ok, sleeping for 10 seconds ...' . PHP_EOL;
+//     sleep(10);
+//     echo 'Done.' . PHP_EOL;
+// } catch (LockException $e) {
+//     echo 'Damn!' . PHP_EOL;
+// }

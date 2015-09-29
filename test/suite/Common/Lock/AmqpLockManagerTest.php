@@ -9,16 +9,24 @@ use PhpAmqpLib\Exception\AMQPExceptionInterface;
 use PhpAmqpLib\Exception\AMQPProtocolChannelException;
 use Psr\Log\LoggerInterface;
 use ReflectionProperty;
+use Skewd\Common\Node\Node;
 
 class AmqpLockManagerTest extends PHPUnit_Framework_TestCase
 {
     public function setUp()
     {
-        $this->channel = Phony::fullMock(AMQPChannel::class);
+        $this->channelA = Phony::fullMock(AMQPChannel::class);
+        $this->channelB = Phony::fullMock(AMQPChannel::class);
+        $this->node = Phony::fullMock(Node::class);
         $this->logger = Phony::fullMock(LoggerInterface::class);
 
+        $this->node->createChannel->returns(
+            $this->channelA->mock(),
+            $this->channelB->mock()
+        );
+
         $this->subject = AmqpLockManager::create(
-            $this->channel->mock(),
+            $this->node->mock(),
             $this->logger->mock()
         );
     }
@@ -27,7 +35,7 @@ class AmqpLockManagerTest extends PHPUnit_Framework_TestCase
     {
         $lock = $this->subject->lock('<resource>');
 
-        $this->channel->queue_declare->calledWith(
+        $this->channelA->queue_declare->calledWith(
             'lock/<resource>',
             false, // passive
             false, // durable
@@ -46,11 +54,12 @@ class AmqpLockManagerTest extends PHPUnit_Framework_TestCase
             $lock
         );
 
-        $this->channel->queue_delete->never()->called();
+        $this->channelA->queue_delete->never()->called();
+        $this->channelB->queue_delete->never()->called();
 
         $lock = false;
 
-        $this->channel->queue_delete->calledWith(
+        $this->channelB->queue_delete->calledWith(
             'lock/<resource>'
         );
 
@@ -72,7 +81,7 @@ class AmqpLockManagerTest extends PHPUnit_Framework_TestCase
         $reflector->setAccessible(true);
         $reflector->setValue($exception, 405); // AMQP resource locked code.
 
-        $this->channel->queue_declare->throws($exception);
+        $this->channelA->queue_declare->throws($exception);
 
         $this->setExpectedException(
             LockException::class,
@@ -102,7 +111,7 @@ class AmqpLockManagerTest extends PHPUnit_Framework_TestCase
         // that is not initialized unless there is an actual connection (gross).
         $exception = Phony::fullMock(AMQPProtocolChannelException::class, null)->mock();
 
-        $this->channel->queue_declare->throws($exception);
+        $this->channelA->queue_declare->throws($exception);
 
         $this->setExpectedException(AMQPProtocolChannelException::class);
 
@@ -119,7 +128,7 @@ class AmqpLockManagerTest extends PHPUnit_Framework_TestCase
             null
         )->mock();
 
-        $this->channel->queue_delete->throws($exception);
+        $this->channelB->queue_delete->throws($exception);
 
         // let scoped lock destruct immediately ...
         $this->subject->lock('<resource>');

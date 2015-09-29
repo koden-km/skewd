@@ -1,10 +1,10 @@
 <?php
 namespace Skewd\Common\Lock;
 
-use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Exception\AMQPExceptionInterface;
 use PhpAmqpLib\Exception\AMQPProtocolChannelException;
 use Psr\Log\LoggerInterface;
+use Skewd\Common\Node\Node;
 
 /**
  * A lock manager that uses AMQP queues as the lockable resource.
@@ -14,14 +14,14 @@ final class AmqpLockManager implements LockManager
     /**
      * Create an AMQP lock manager.
      *
-     * @param AMQPChannel     $channel The AMQP channel used to communicate with the server.
-     * @param LoggerInterface $logger  A logger to use for debug output.
+     * @param Node            $node   The node that owns the acquired locks.
+     * @param LoggerInterface $logger A logger to use for debug output.
      *
      * @return AmqpLockManager
      */
-    public static function create(AMQPChannel $channel, LoggerInterface $logger)
+    public static function create(Node $node, LoggerInterface $logger)
     {
-        return new self($channel, $logger);
+        return new self($node, $logger);
     }
 
     /**
@@ -38,7 +38,7 @@ final class AmqpLockManager implements LockManager
     public function lock($resource)
     {
         try {
-            $this->channel->queue_declare(
+            $this->node->createChannel()->queue_declare(
                 $this->queueName($resource),
                 false, // passive
                 false, // durable
@@ -81,13 +81,12 @@ final class AmqpLockManager implements LockManager
      *
      * @see AmqpLockManager::create()
      *
-     * @see HexNodeIdGenerator::create()
-     * @param AMQPChannel     $channel The AMQP channel used to communicate with the server.
-     * @param LoggerInterface $logger  A logger to use for debug output.
+     * @param Node            $node   The node that owns the acquired locks.
+     * @param LoggerInterface $logger A logger to use for debug output.
      */
-    public function __construct(AMQPChannel $channel, LoggerInterface $logger)
+    public function __construct(Node $node, LoggerInterface $logger)
     {
-        $this->channel = $channel;
+        $this->node = $node;
         $this->logger = $logger;
     }
 
@@ -101,7 +100,7 @@ final class AmqpLockManager implements LockManager
     private function unlock($resource)
     {
         try {
-            $this->channel->queue_delete(
+            $this->node->createChannel()->queue_delete(
                 $this->queueName($resource)
             );
 
@@ -134,6 +133,6 @@ final class AmqpLockManager implements LockManager
 
     const AMQP_RESOURCE_LOCKED_CODE = 405;
 
-    private $channel;
+    private $node;
     private $logger;
 }

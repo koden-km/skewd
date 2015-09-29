@@ -1,13 +1,10 @@
 <?php
-namespace Skewd\Common\Amqp;
+namespace Skewd\Amqp\Connection;
 
 use Eloquent\Phony\Phpunit\Phony;
 use Exception;
 use Icecave\Isolator\Isolator;
-use InvalidArgumentException;
 use PHPUnit_Framework_TestCase;
-use PhpAmqpLib\Connection\AbstractConnection;
-use PhpAmqpLib\Exception\AMQPExceptionInterface;
 
 class ClusterConnectorTest extends PHPUnit_Framework_TestCase
 {
@@ -16,13 +13,12 @@ class ClusterConnectorTest extends PHPUnit_Framework_TestCase
         // Prevent shuffle() from actually shuffling so that the tests are
         // predictable ...
         $this->isolator = Phony::fullMock(Isolator::class);
-        $this->isolator->shuffle->does(function () {});
 
-        $this->connectionA = Phony::fullMock(AbstractConnection::class)->mock();
-        $this->connectionB = Phony::fullMock(AbstractConnection::class)->mock();
+        $this->connectionA = Phony::fullMock(Connection::class)->mock();
+        $this->connectionB = Phony::fullMock(Connection::class)->mock();
 
-        $this->exceptionA = Phony::fullMock([AMQPExceptionInterface::class, Exception::class])->mock();
-        $this->exceptionB = Phony::fullMock([AMQPExceptionInterface::class, Exception::class])->mock();
+        $this->exceptionA = ConnectionException::couldNotConnect();
+        $this->exceptionB = ConnectionException::couldNotConnect();
 
         $this->connectorA = Phony::fullMock(Connector::class);
         $this->connectorB = Phony::fullMock(Connector::class);
@@ -49,11 +45,6 @@ class ClusterConnectorTest extends PHPUnit_Framework_TestCase
             $this->connectionA,
             $connection
         );
-    }
-
-    public function testConnectWhenEmpty()
-    {
-        $this->markTestIncomplete();
     }
 
     public function testConnectShufflesConnectionOrder()
@@ -97,11 +88,11 @@ class ClusterConnectorTest extends PHPUnit_Framework_TestCase
         $this->connectorA->connect->throws($this->exceptionA);
         $this->connectorB->connect->throws($this->exceptionB);
 
-        $this->setExpectedException(AMQPExceptionInterface::class);
+        $this->setExpectedException(ConnectionException::class);
 
         try {
             $this->subject->connect();
-        } catch (AMQPExceptionInterface $e) {
+        } catch (ConnectionException $e) {
             Phony::inOrder(
                 $this->connectorA->connect->called(),
                 $this->connectorB->connect->called()
@@ -119,8 +110,10 @@ class ClusterConnectorTest extends PHPUnit_Framework_TestCase
     public function testConstructorWithNoConnectors()
     {
         $this->setExpectedException(
-            InvalidArgumentException::class,
-            'At least one connector must be provided.'
+            Exception::class,
+            'Argument 1 passed to '
+            . ClusterConnector::class . '::' . __NAMESPACE__ . '\{closure}() must implement interface '
+            . Connector::class . ', none given'
         );
 
         new ClusterConnector([]);
