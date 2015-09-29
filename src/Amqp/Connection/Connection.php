@@ -32,6 +32,8 @@ interface Connection
 
     /**
      * Wait for connection activity.
+     * 
+     * @param int $timeout The timeout in milliseconds?
      *
      * @return ConnectionWaitResult
      *
