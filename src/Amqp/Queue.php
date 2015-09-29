@@ -17,7 +17,7 @@ interface Queue
     public function name();
 
     /**
-     * Get the queue was declared.
+     * Get the queue parameters.
      *
      * @return array<QueueParameter> The queue parameters.
      */
@@ -53,7 +53,7 @@ interface Queue
      * Consume messages from this queue.
      *
      * @param array<ConsumerParameter>|null $parameters Parameters to set on the consumer, or null to use the defaults.
-     * @param string                        $tag        A unique identifier for the consumer, or an empty string to have the server generated the consumer tag.
+     * @param string                        $tag        A unique identifier for the consumer, or an empty string to have the server generate the consumer tag.
      *
      * @return Consumer
      */
