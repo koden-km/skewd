@@ -24,19 +24,21 @@ interface Channel
      *
      * @return Exchange         The exchange.
      * @throws DeclareException if the exchange could not be declared because it already exists with different parameters.
+     * @throws ConnectionException if not connected to the AMQP server.
      */
     public function exchange($name, ExchangeType $type, array $parameters = null);
 
     /**
      * Get the built-in nameless direct exchange.
      *
-     * Every queue that is created it automatically bound to the default
-     * exchange with a routing key the same as the queue name.
+     * Every queue is automatically bound to the default exchange with a routing
+     * key the same as the queue name.
      *
      * @see Channel::exchange()
      * @see Channel::builtInExchange()
      *
      * @return Exchange The built-in nameless exchange.
+     * @throws ConnectionException if not connected to the AMQP server.
      */
     public function defaultExchange();
 
@@ -49,6 +51,7 @@ interface Channel
      * @param ExchangeType $type The exchange type.
      *
      * @return Exchange The built-in exchange.
+     * @throws ConnectionException if not connected to the AMQP server.
      */
     public function builtInExchange(ExchangeType $type);
 
@@ -60,6 +63,7 @@ interface Channel
      *
      * @return Queue            The queue.
      * @throws DeclareException if the queue could not be declared because it already exists with different parameters.
+     * @throws ConnectionException if not connected to the AMQP server.
      */
     public function queue($name = '', array $parameters = null);
 
