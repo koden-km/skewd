@@ -155,6 +155,7 @@ final class PalChannel implements Channel
     {
         try {
             $this->channel->close();
+        } catch (HANDLE_DISCONNECT $e) {
         } catch (AMQPExceptionInterface $e) {
             // ignore ...
         } finally {

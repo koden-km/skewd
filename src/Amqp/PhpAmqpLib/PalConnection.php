@@ -1,9 +1,11 @@
 <?php
 namespace Skewd\Amqp\PhpAmqpLib;
 
+use Exception;
 use PhpAmqpLib\Connection\AbstractConnection;
-use PhpAmqpLib\Exception\AMQPExceptionInterface;
 use Skewd\Amqp\Connection\Connection;
+use Skewd\Amqp\Connection\ConnectionException;
+use Skewd\Amqp\Connection\ConnectionWaitResult;
 
 /**
  * Please note that this code is not part of the public API. It may be changed
@@ -45,10 +47,14 @@ final class PalConnection implements Connection
      */
     public function close()
     {
-        if ($this->connection) {
-            $connection = $this->connection;
+        if (!$this->connection) {
+            return;
+        }
+
+        try {
+            $this->connection->close();
+        } finally {
             $this->connection = null;
-            $connection->close();
         }
     }
 
@@ -57,20 +63,24 @@ final class PalConnection implements Connection
      *
      * @return Channel The newly created channel.
      *
-     * @throws ChannelException    if the channel can not be created.
      * @throws ConnectionException if not connected to the AMQP server.
      */
     public function channel()
     {
+        if (!$this->connection) {
+            throw ConnectionException::notConnected();
+        }
+
         try {
             $channel = $this->connection->channel();
-        } catch (CHANNEL_EXCEPTION $e) {
-            throw ChannelException::creationFailure($e);
-        } catch (CONNECTION_EXCEPTION $e) {
-            // LOOKS like this is a AMQPRuntimeException, but that may not be enough to tell :/
+        } catch (Exception $e) {
+            if ($this->connection->isConnected()) {
+                throw $e;
+            }
+
             $this->connection = null;
 
-            throw ConnectionException::notConnected(e);
+            throw ConnectionException::notConnected($e);
         }
 
         return new PalChannel($channel);
@@ -79,13 +89,36 @@ final class PalConnection implements Connection
     /**
      * Wait for connection activity.
      *
-     * @return ConnectionWaitResult
+     * @param integer|float $timeout How long to wait for activity, in seconds.
      *
-     * @throws ConnectionException if not connected to the AMQP server.
+     * @return ConnectionWaitResult
+     * @throws ConnectionException  if not connected to the AMQP server.
      */
     public function wait($timeout)
     {
-        throw new \LogicException('Not implemented.');
+        if (!$this->connection) {
+            throw ConnectionException::notConnected();
+        }
+
+        $ready = @$this->connection->select(
+            0,
+            intval($timeout * 1000000)
+        );
+
+        if (0 === $ready) {
+            return ConnectionWaitResult::TIMEOUT();
+        } elseif (false === $ready) {
+            return ConnectionWaitResult::SIGNAL();
+        }
+
+        foreach ($this->connection->channels as $channel) {
+            $channel->wait(
+                null, // allowed methods
+                true  // non-blocking
+            );
+        }
+
+        return ConnectionWaitResult::READY();
     }
 
     private $connection;

@@ -25,7 +25,6 @@ interface Connection
      *
      * @return Channel The newly created channel.
      *
-     * @throws ChannelException    if the channel can not be created.
      * @throws ConnectionException if not connected to the AMQP server.
      */
     public function channel();
@@ -33,9 +32,10 @@ interface Connection
     /**
      * Wait for connection activity.
      *
-     * @return ConnectionWaitResult
+     * @param integer|float $timeout How long to wait for activity, in seconds.
      *
-     * @throws ConnectionException if not connected to the AMQP server.
+     * @return ConnectionWaitResult
+     * @throws ConnectionException  if not connected to the AMQP server.
      */
     public function wait($timeout);
 }

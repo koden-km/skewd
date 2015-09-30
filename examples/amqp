@@ -11,8 +11,19 @@ use Skewd\Amqp\PhpAmqpLib\PalConnector;
 $connector = PalConnector::create();
 $connection = $connector->connect();
 
-sleep(20);
 $channel = $connection->channel();
+$channel = $connection->channel();
+
+pcntl_signal(SIGHUP, function () {echo 'YO!' . PHP_EOL;}, false);
+
+echo getmypid() . PHP_EOL;
+echo microtime(true) . PHP_EOL;
+var_dump(
+    $connection->wait(30)
+);
+echo microtime(true) . PHP_EOL;
+
+
 
 // $exchange = $channel->defaultExchange();
 
