@@ -20,7 +20,7 @@ final class Message
     public static function create(
         $payload,
         AttributeCollection $amqpProperties = null,
-        AttributeCollection $customProperties = null,
+        AttributeCollection $customProperties = null
     ) {
         return new self(
             $payload,
@@ -67,7 +67,7 @@ final class Message
     private function __construct(
         $payload,
         AttributeCollection $amqpProperties = null,
-        AttributeCollection $customProperties = null,
+        AttributeCollection $customProperties = null
     ) {
         $this->payload = $payload;
         $this->amqpProperties = $amqpProperties ?: AttributeCollection::create();

@@ -22,8 +22,8 @@ interface Channel
      * @param ExchangeType                  $type       The exchange type.
      * @param array<ExchangeParameter>|null $parameters Parameters to set on the exchange, or null to use the defaults.
      *
-     * @return Exchange         The exchange.
-     * @throws DeclareException if the exchange could not be declared because it already exists with different parameters.
+     * @return Exchange            The exchange.
+     * @throws DeclareException    if the exchange could not be declared because it already exists with different parameters.
      * @throws ConnectionException if not connected to the AMQP server.
      */
     public function exchange($name, ExchangeType $type, array $parameters = null);
@@ -37,7 +37,7 @@ interface Channel
      * @see Channel::exchange()
      * @see Channel::builtInExchange()
      *
-     * @return Exchange The built-in nameless exchange.
+     * @return Exchange            The built-in nameless exchange.
      * @throws ConnectionException if not connected to the AMQP server.
      */
     public function defaultExchange();
@@ -50,7 +50,7 @@ interface Channel
      *
      * @param ExchangeType $type The exchange type.
      *
-     * @return Exchange The built-in exchange.
+     * @return Exchange            The built-in exchange.
      * @throws ConnectionException if not connected to the AMQP server.
      */
     public function builtInExchange(ExchangeType $type);
@@ -61,8 +61,8 @@ interface Channel
      * @param string                     $name       The queue name, or an empty string to have the server generated a name.
      * @param array<QueueParameter>|null $parameters Parameters to set on the queue, or null to use the defaults.
      *
-     * @return Queue            The queue.
-     * @throws DeclareException if the queue could not be declared because it already exists with different parameters.
+     * @return Queue               The queue.
+     * @throws DeclareException    if the queue could not be declared because it already exists with different parameters.
      * @throws ConnectionException if not connected to the AMQP server.
      */
     public function queue($name = '', array $parameters = null);
