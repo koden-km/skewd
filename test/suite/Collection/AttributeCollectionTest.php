@@ -1,5 +1,5 @@
 <?php
-namespace Skewd\Common\Collection;
+namespace Skewd\Collection;
 
 use LogicException;
 use PHPUnit_Framework_TestCase;

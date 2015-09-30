@@ -1,7 +1,7 @@
 <?php
 namespace Skewd\Amqp;
 
-use Skewd\Common\Collection\AttributeCollection;
+use Skewd\Collection\AttributeCollection;
 
 /**
  * An AMQP message.

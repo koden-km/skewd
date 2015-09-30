@@ -3,7 +3,7 @@ namespace Skewd\Common\Session;
 
 use LogicException;
 use PHPUnit_Framework_TestCase;
-use Skewd\Common\Collection\AttributeCollection;
+use Skewd\Collection\AttributeCollection;
 
 class SessionTest extends PHPUnit_Framework_TestCase
 {

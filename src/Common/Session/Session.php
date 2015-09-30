@@ -1,7 +1,7 @@
 <?php
 namespace Skewd\Common\Session;
 
-use Skewd\Common\Collection\AttributeCollection;
+use Skewd\Collection\AttributeCollection;
 
 /**
  * A session.

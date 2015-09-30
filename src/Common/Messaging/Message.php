@@ -1,7 +1,7 @@
 <?php
 namespace Skewd\Common\Messaging;
 
-use Skewd\Common\Collection\AttributeCollection;
+use Skewd\Collection\AttributeCollection;
 
 /**
  * A unit of information that can be sent to other nodes.

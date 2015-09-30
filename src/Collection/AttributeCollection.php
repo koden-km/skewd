@@ -1,5 +1,5 @@
 <?php
-namespace Skewd\Common\Collection;
+namespace Skewd\Collection;
 
 use IteratorAggregate;
 use LogicException;

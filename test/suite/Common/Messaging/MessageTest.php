@@ -2,7 +2,7 @@
 namespace Skewd\Common\Messaging;
 
 use PHPUnit_Framework_TestCase;
-use Skewd\Common\Collection\AttributeCollection;
+use Skewd\Collection\AttributeCollection;
 
 class MessageTest extends PHPUnit_Framework_TestCase
 {
