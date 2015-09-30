@@ -6,7 +6,7 @@ use Icecave\Isolator\IsolatorTrait;
 /**
  * Generates random hexadecimal strings suitable for use as node IDs.
  */
-final class HexIdGenerator implements NodeIdGenerator
+final class HexIdGenerator implements IdGenerator
 {
     /**
      * Create a hex node ID generator.

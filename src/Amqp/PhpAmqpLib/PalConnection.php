@@ -27,9 +27,13 @@ final class PalConnection implements Connection
      */
     public function isConnected()
     {
-        if ($this->connection) {
-            return $this->connection->isConnected();
+        if (!$this->connection) {
+            return false;
+        } elseif ($this->connection->isConnected()) {
+            return true;
         }
+
+        $this->connection = null;
 
         return false;
     }
@@ -41,14 +45,10 @@ final class PalConnection implements Connection
      */
     public function close()
     {
-        try {
-            if ($this->connection) {
-                $this->connection->close();
-            }
-        } catch (AMQPExceptionInterface $e) {
-            // ignore ...
-        } finally {
+        if ($this->connection) {
+            $connection = $this->connection;
             $this->connection = null;
+            $connection->close();
         }
     }
 
@@ -57,20 +57,31 @@ final class PalConnection implements Connection
      *
      * @return Channel The newly created channel.
      *
-     * @throws ConnectionException if the connection has not been established.
      * @throws ChannelException    if the channel can not be created.
+     * @throws ConnectionException if not connected to the AMQP server.
      */
     public function channel()
     {
-        return new PhpAmqpLibChannel(
-            $this->connection->channel()
-        );
+        try {
+            $channel = $this->connection->channel();
+        } catch (CHANNEL_EXCEPTION $e) {
+            throw ChannelException::creationFailure($e);
+        } catch (CONNECTION_EXCEPTION $e) {
+            // LOOKS like this is a AMQPRuntimeException, but that may not be enough to tell :/
+            $this->connection = null;
+
+            throw ConnectionException::notConnected(e);
+        }
+
+        return new PalChannel($channel);
     }
 
     /**
      * Wait for connection activity.
      *
-     * @return boolean True if the wait operation was interrupted by a signal; otherwise, false.
+     * @return ConnectionWaitResult
+     *
+     * @throws ConnectionException if not connected to the AMQP server.
      */
     public function wait($timeout)
     {

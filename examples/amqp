@@ -6,21 +6,22 @@ Eloquent\Asplode\Asplode::install();
 
 use Icecave\Stump\Logger;
 use Skewd\Amqp\ExchangeType;
-use Skewd\Amqp\PhpAmqpLib\StreamConnector;
+use Skewd\Amqp\PhpAmqpLib\PalConnector;
 
-$connector = StreamConnector::create();
+$connector = PalConnector::create();
 $connection = $connector->connect();
 
+sleep(20);
 $channel = $connection->channel();
 
-$exchange = $channel->defaultExchange();
+// $exchange = $channel->defaultExchange();
 
-$queue = $channel->queue();
-
-
+// $queue = $channel->queue();
 
 
-sleep(30);
+
+
+// sleep(30);
 
 // $logger = new Logger;
 // $connector = StreamConnector::create();

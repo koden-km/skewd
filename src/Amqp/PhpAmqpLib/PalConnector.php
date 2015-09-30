@@ -42,7 +42,7 @@ final class PalConnector implements Connector
      * Connect to an AMQP server.
      *
      * @return Connection          The AMQP connection.
-     * @throws ConnectionException If the connection could not be established.
+     * @throws ConnectionException if the connection could not be established.
      */
     public function connect()
     {

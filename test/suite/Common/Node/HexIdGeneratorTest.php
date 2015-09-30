@@ -1,16 +1,14 @@
 <?php
-namespace Skewd\Common\Messaging;
+namespace Skewd\Common\Node;
 
 use Eloquent\Phony\Phpunit\Phony;
 use Icecave\Isolator\Isolator;
 use PHPUnit_Framework_TestCase;
 
-class HexNodeIdGeneratorTest extends PHPUnit_Framework_TestCase
+class HexIdGeneratorTest extends PHPUnit_Framework_TestCase
 {
     public function setUp()
     {
-        $this->markTestSkipped();
-
         $this->isolator = Phony::fullMock(Isolator::class);
 
         $this
@@ -25,7 +23,7 @@ class HexNodeIdGeneratorTest extends PHPUnit_Framework_TestCase
                 9, 10
             );
 
-        $this->subject = HexNodeIdGenerator::create();
+        $this->subject = HexIdGenerator::create();
 
         $this->subject->setIsolator($this->isolator->mock());
     }
