@@ -2,6 +2,8 @@
 namespace Skewd\Amqp;
 
 use Eloquent\Enumeration\AbstractEnumeration;
+use InvalidArgumentException;
+use SplObjectStorage;
 
 /**
  * Parameters used to configure an exchange.
