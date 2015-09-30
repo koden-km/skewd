@@ -17,7 +17,7 @@ use Skewd\Amqp\QueueParameter;
  *
  * An AMQP channel.
  */
-final class PhpAmqpLibChannel implements Channel
+final class PalChannel implements Channel
 {
     public function __construct(AMQPChannel $channel)
     {

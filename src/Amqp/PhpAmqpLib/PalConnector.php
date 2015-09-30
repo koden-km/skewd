@@ -1,18 +1,24 @@
 <?php
-namespace Skewd\Common\Amqp;
+namespace Skewd\Amqp\PhpAmqpLib;
 
 use Icecave\Isolator\IsolatorTrait;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Exception\AMQPExceptionInterface;
+use Skewd\Amqp\Connection\ConnectionException;
+use Skewd\Amqp\Connection\Connector;
 
 /**
- * Creates non-SSL stream based AMQP connections, authenticated using the
- * AMQPLAIN mechanism.
+ * A connector that creates non-SSL AMQP connections using PhpAmqpLib.
+ *
+ * This is the only class in Skewd's PhpAmqlLib-based AMQP implementation that
+ * is part of the public API.
+ *
+ * @deprecated
  */
-final class StreamConnector implements Connector
+final class PalConnector implements Connector
 {
     /**
-     * Create a stream connector.
+     * Create a connector.
      *
      * @param string  $host     The AMQP server hostname or IP address.
      * @param integer $port     The AMQP server port.
@@ -20,7 +26,7 @@ final class StreamConnector implements Connector
      * @param string  $password The password used to authenticate.
      * @param string  $vhost    The AMQP virtual host to use.
      *
-     * @return StreamConnector
+     * @return PalConnector
      */
     public static function create(
         $host = 'localhost',
@@ -35,19 +41,25 @@ final class StreamConnector implements Connector
     /**
      * Connect to an AMQP server.
      *
-     * @return AbstractConnection     The server connection.
-     * @throws AMQPExceptionInterface The connection could not be established.
+     * @return Connection          The AMQP connection.
+     * @throws ConnectionException If the connection could not be established.
      */
     public function connect()
     {
-        return $this->isolator()->new(
-            AMQPStreamConnection::class,
-            $this->host,
-            $this->port,
-            $this->username,
-            $this->password,
-            $this->vhost
-        );
+        try {
+            $connection = $this->isolator()->new(
+                AMQPStreamConnection::class,
+                $this->host,
+                $this->port,
+                $this->username,
+                $this->password,
+                $this->vhost
+            );
+        } catch (AMQPExceptionInterface $e) {
+            throw ConnectionException::couldNotConnect($e);
+        }
+
+        return new PalConnection($connection);
     }
 
     /**

@@ -3,7 +3,7 @@ namespace Skewd\Amqp\PhpAmqpLib;
 
 use PhpAmqpLib\Connection\AbstractConnection;
 use PhpAmqpLib\Exception\AMQPExceptionInterface;
-use Skewd\Amqp\Connection;
+use Skewd\Amqp\Connection\Connection;
 
 /**
  * Please note that this code is not part of the public API. It may be changed
@@ -13,7 +13,7 @@ use Skewd\Amqp\Connection;
  *
  * A connection to an AMQP server.
  */
-final class PhpAmqpLibConnection implements Connection
+final class PalConnection implements Connection
 {
     public function __construct(AbstractConnection $connection)
     {

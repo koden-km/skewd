@@ -6,6 +6,8 @@ namespace Skewd\Amqp\PhpAmqpLib;
  * or removed at any time without notice.
  *
  * @access private
+ *
+ * Provides methods for converting AMQP between Skewd and PhpAmqpLib formats.
  */
 trait MessageMarshallerTrait
 {

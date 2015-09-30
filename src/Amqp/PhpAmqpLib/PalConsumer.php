@@ -14,7 +14,7 @@ use SplQueue;
  *
  * A message consumer.
  */
-final class PhpAmqpLibConsumer implements Consumer
+final class PalConsumer implements Consumer
 {
     public function __construct(
         array $parameters = null,

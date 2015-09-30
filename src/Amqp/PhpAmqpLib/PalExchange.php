@@ -14,7 +14,7 @@ use Skewd\Amqp\ExchangeType;
  *
  * An AMQP exchange.
  */
-final class PhpAmqpLibExchange implements Exchange
+final class PalExchange implements Exchange
 {
     public function __construct(
         $name,
