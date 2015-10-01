@@ -81,9 +81,12 @@ final class PalQueue implements Queue
      * This is a convenience method equivalent to publishing to the pre-declared,
      * nameless, direct exchange with a routing key equal to the queue name.
      *
-     * @param Message $message The message to publish.
+     * @param Message                   $message The message to publish.
+     * @param array<PublishOption>|null $options An array of options to set, or null to use the defaults.
+     *
+     * @throws ConnectionException if not connected to the AMQP server.
      */
-    public function publish(Message $message)
+    public function publish(Message $message, array $options = null)
     {
         throw new \LogicException('Not implemented.');
     }

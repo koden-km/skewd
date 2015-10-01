@@ -1,6 +1,9 @@
 <?php
 namespace Skewd\Amqp\PhpAmqpLib;
 
+use PhpAmqpLib\Message\AMQPMessage;
+use Skewd\Amqp\Message;
+
 /**
  * Please note that this code is not part of the public API. It may be changed
  * or removed at any time without notice.

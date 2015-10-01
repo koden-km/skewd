@@ -32,4 +32,18 @@ final class ExchangeType extends AbstractEnumeration
      * headers. The routing key is ignored.
      */
     const HEADERS = 'headers';
+
+    /**
+     * Check whether this exchange type requires a routing key when publishing
+     * a message.
+     *
+     * @return boolean True if the routing key is required; otherwise, false.
+     */
+    public function requiresRoutingKey()
+    {
+        return $this->anyOf(
+            self::DIRECT(),
+            self::TOPIC()
+        );
+    }
 }
