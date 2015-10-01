@@ -11,18 +11,26 @@ final class Message
     /**
      * Create a message.
      *
-     * @param string                   $payload          The main message payload.
-     * @param AttributeCollection|null $amqpProperties   AMQP message properties.
-     * @param AttributeCollection|null $customProperties Application-specific message properties.
+     * @param string                    $payload          The main message payload.
+     * @param AttributeCollection|array $amqpProperties   AMQP message properties.
+     * @param AttributeCollection|array $customProperties Application-specific message properties.
      *
      * @return Message
      */
     public static function create(
         $payload,
-        AttributeCollection $amqpProperties = null,
-        AttributeCollection $customProperties = null
+        $amqpProperties = [],
+        $customProperties = []
     ) {
-        return new self(
+        if (!$amqpProperties instanceof AttributeCollection) {
+            $amqpProperties = AttributeCollection::create($amqpProperties);
+        }
+
+        if (!$customProperties instanceof AttributeCollection) {
+            $customProperties = AttributeCollection::create($customProperties);
+        }
+
+         return new self(
             $payload,
             $amqpProperties,
             $customProperties
@@ -60,18 +68,18 @@ final class Message
     }
 
     /**
-     * @param string                   $payload          The main message payload.
-     * @param AttributeCollection|null $amqpProperties   AMQP message properties.
-     * @param AttributeCollection|null $customProperties Application-specific message properties.
+     * @param string                    $payload          The main message payload.
+     * @param AttributeCollection|array $amqpProperties   AMQP message properties.
+     * @param AttributeCollection|array $customProperties Application-specific message properties.
      */
     private function __construct(
         $payload,
-        AttributeCollection $amqpProperties = null,
-        AttributeCollection $customProperties = null
+        AttributeCollection $amqpProperties,
+        AttributeCollection $customProperties
     ) {
         $this->payload = $payload;
-        $this->amqpProperties = $amqpProperties ?: AttributeCollection::create();
-        $this->customProperties = $customProperties ?: AttributeCollection::create();
+        $this->amqpProperties = $amqpProperties;
+        $this->customProperties = $customProperties;
     }
 
     private $payload;

@@ -2,6 +2,7 @@
 namespace Skewd\Amqp\PhpAmqpLib;
 
 use PhpAmqpLib\Message\AMQPMessage;
+use PhpAmqpLib\Wire\AMQPTable;
 use Skewd\Amqp\Message;
 
 /**
@@ -26,16 +27,20 @@ trait MessageMarshallerTrait
         $amqpProperties = $message->get_properties();
 
         if (isset($amqpProperties['application_headers'])) {
-            $customProperties = $amqpProperties['application_headers']->getNativeData();
+            $customProperties = $amqpProperties['application_headers'];
             unset($amqpProperties['application_headers']);
+
+            if ($customProperties instanceof AMQPTable) {
+                $customProperties = $customProperties->getNativeData();
+            }
         } else {
             $customProperties = [];
         }
 
         return Message::create(
-            $message->getBody(),
-            AttributeCollection::create($amqpProperties),
-            AttributeCollection::create($customProperties)
+            $message->body,
+            $amqpProperties,
+            $customProperties
         );
     }
 
