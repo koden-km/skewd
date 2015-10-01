@@ -12,11 +12,11 @@ interface Channel
     /**
      * Declare an exchange.
      *
-     * To get a reference to one of the built-in exchanges, see the methods
+     * To get a reference to one of the pre-declared exchanges, see the methods
      * below:
      *
-     * @see Channel::defaultExchange()
-     * @see Channel::builtInExchange()
+     * @see Channel::directExchange()
+     * @see Channel::amqExchange()
      *
      * @param string                        $name       The exchange name.
      * @param ExchangeType                  $type       The exchange type.
@@ -25,47 +25,66 @@ interface Channel
      * @return Exchange            The exchange.
      * @throws DeclareException    if the exchange could not be declared because it already exists with different parameters.
      * @throws ConnectionException if not connected to the AMQP server.
+     * @throws LogicException      if the channel has been closed.
      */
     public function exchange($name, ExchangeType $type, array $parameters = null);
 
     /**
-     * Get the built-in nameless direct exchange.
+     * Get the pre-declared, nameless, direct exchange.
      *
      * Every queue is automatically bound to the default exchange with a routing
      * key the same as the queue name.
      *
-     * @see Channel::exchange()
-     * @see Channel::builtInExchange()
+     * @link https://www.rabbitmq.com/tutorials/amqp-concepts.html#exchanges
      *
-     * @return Exchange            The built-in nameless exchange.
+     * @see Channel::exchange()
+     * @see Channel::amqExchange()
+     *
+     * @return Exchange            The pre-declared, nameless, direct exchange.
      * @throws ConnectionException if not connected to the AMQP server.
+     * @throws LogicException      if the channel has been closed.
      */
-    public function defaultExchange();
+    public function directExchange();
 
     /**
-     * Get the built-in amq.* exchange of the given type.
+     * Get the pre-declared amq.* exchange of the given type.
+     *
+     * @link https://www.rabbitmq.com/tutorials/amqp-concepts.html#exchanges
      *
      * @see Channel::exchange()
-     * @see Channel::defaultExchange()
+     * @see Channel::directExchange()
      *
      * @param ExchangeType $type The exchange type.
      *
-     * @return Exchange            The built-in exchange.
+     * @return Exchange            The amq.* exchange.
      * @throws ConnectionException if not connected to the AMQP server.
+     * @throws LogicException      if the channel has been closed.
      */
-    public function builtInExchange(ExchangeType $type);
+    public function amqExchange(ExchangeType $type);
 
     /**
      * Declare a queue.
      *
+     * Called with no arguments, this method will return an exclusive,
+     * auto-deleting queue with a server-generated name.
+     *
      * @param string                     $name       The queue name, or an empty string to have the server generated a name.
      * @param array<QueueParameter>|null $parameters Parameters to set on the queue, or null to use the defaults.
      *
-     * @return Queue               The queue.
-     * @throws DeclareException    if the queue could not be declared because it already exists with different parameters.
-     * @throws ConnectionException if not connected to the AMQP server.
+     * @return Queue                   The queue.
+     * @throws DeclareException        if the queue could not be declared because it already exists with different parameters.
+     * @throws ResourceLockedException if the queue already exists, but another connection has exclusive access.
+     * @throws ConnectionException     if not connected to the AMQP server.
+     * @throws LogicException          if the channel has been closed.
      */
     public function queue($name = '', array $parameters = null);
+
+    /**
+     * Check if the channel is still open.
+     *
+     * @return boolean True if the channel is open; otherwise, false.
+     */
+    public function isOpen();
 
     /**
      * Close the channel.

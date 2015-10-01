@@ -10,41 +10,12 @@ use Skewd\Amqp\PhpAmqpLib\PalConnector;
 
 $connector = PalConnector::create();
 $connection = $connector->connect();
-
-$channel = $connection->channel();
 $channel = $connection->channel();
 
-pcntl_signal(SIGHUP, function () {echo 'YO!' . PHP_EOL;}, false);
+try {
+    $exchange = $channel->exchange('abc', ExchangeType::FANOUT());
+} catch (Exception $e) {
+    echo 'Exception Code: ' . $e->getCode() . PHP_EOL;
 
-echo getmypid() . PHP_EOL;
-echo microtime(true) . PHP_EOL;
-var_dump(
-    $connection->wait(30)
-);
-echo microtime(true) . PHP_EOL;
-
-
-
-// $exchange = $channel->defaultExchange();
-
-// $queue = $channel->queue();
-
-
-
-
-// sleep(30);
-
-// $logger = new Logger;
-// $connector = StreamConnector::create();
-// $connection = $connector->connect();
-// $channel = $connection->channel();
-// $lockManager = AmqpLockManager::create($channel, $logger);
-
-// try {
-//     $lock = $lockManager->lock('foo');
-//     echo 'Ok, sleeping for 10 seconds ...' . PHP_EOL;
-//     sleep(10);
-//     echo 'Done.' . PHP_EOL;
-// } catch (LockException $e) {
-//     echo 'Damn!' . PHP_EOL;
-// }
+    throw $e;
+}

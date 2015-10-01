@@ -3,8 +3,11 @@ namespace Skewd\Amqp\PhpAmqpLib;
 
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Message\AMQPMessage;
+use Skewd\Amqp\Exchange;
+use Skewd\Amqp\Message;
 use Skewd\Amqp\Queue;
 use Skewd\Amqp\QueueParameter;
+use SplObjectStorage;
 
 /**
  * Please note that this code is not part of the public API. It may be changed
@@ -16,10 +19,13 @@ use Skewd\Amqp\QueueParameter;
  */
 final class PalQueue implements Queue
 {
-    public function __construct($name, array $parameters = null, AMQPChannel $channel)
-    {
+    public function __construct(
+        $name,
+        SplObjectStorage $parameters,
+        AMQPChannel $channel
+    ) {
         $this->name = $name;
-        $this->parameters = QueueParameter::adapt($parameters);
+        $this->parameters = $parameters;
         $this->channel = $channel;
     }
 
@@ -36,7 +42,7 @@ final class PalQueue implements Queue
     /**
      * Get the queue parameters.
      *
-     * @return array<QueueParameter> The queue parameters.
+     * @return SplObjectStorage<QueueParameter, boolean> A map of parameter to on/off state.
      */
     public function parameters()
     {
@@ -56,6 +62,30 @@ final class PalQueue implements Queue
             $exchange->name(),
             $routingKey
         );
+    }
+
+    /**
+     * Unbind this queue from an exchange.
+     *
+     * @param Exchange    $exchange   The exchange.
+     * @param string|null $routingKey The routing key, or null if the exchange type is FANOUT or HEADERS.
+     */
+    public function unbind(Exchange $exchange, $routingKey = null)
+    {
+        throw new \LogicException('Not implemented.');
+    }
+
+    /**
+     * Publish a message directly to this queue.
+     *
+     * This is a convenience method equivalent to publishing to the pre-declared,
+     * nameless, direct exchange with a routing key equal to the queue name.
+     *
+     * @param Message $message The message to publish.
+     */
+    public function publish(Message $message)
+    {
+        throw new \LogicException('Not implemented.');
     }
 
     /**

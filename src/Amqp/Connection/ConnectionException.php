@@ -19,7 +19,7 @@ final class ConnectionException extends RuntimeException
      */
     public static function couldNotConnect(Exception $previous = null)
     {
-        return new self('Unable to connect to AMQP server.', $previous);
+        return new self('Unable to connect to AMQP server.', 0, $previous);
     }
 
     /**
@@ -32,27 +32,6 @@ final class ConnectionException extends RuntimeException
      */
     public static function notConnected(Exception $previous = null)
     {
-        return new self('Disconnected from AMQP server.', $previous);
-    }
-
-    /**
-     * Please note that this code is not part of the public API. It may be
-     * changed or removed at any time without notice.
-     *
-     * @access private
-     *
-     * This constructor is only public because PHP does not let you make
-     * exception constructors private. If you are explicitly constructing an
-     * instance please use one of the static factory methods listed below.
-     *
-     * @see ConnectionException::couldNotConnect()
-     * @see ConnectionException::notConnected()
-     *
-     * @param string         $message  A description of the error.
-     * @param Exception|null $previous The exception that caused this exception, if any.
-     */
-    public function __construct($message, Exception $previous = null)
-    {
-        parent::__construct($message, 0, $previous);
+        return new self('Disconnected from AMQP server.', 0, $previous);
     }
 }

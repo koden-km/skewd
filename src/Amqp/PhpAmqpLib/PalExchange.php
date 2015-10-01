@@ -5,6 +5,8 @@ use PhpAmqpLib\Channel\AMQPChannel;
 use Skewd\Amqp\Exchange;
 use Skewd\Amqp\ExchangeParameter;
 use Skewd\Amqp\ExchangeType;
+use Skewd\Amqp\Message;
+use SplObjectStorage;
 
 /**
  * Please note that this code is not part of the public API. It may be changed
@@ -19,12 +21,12 @@ final class PalExchange implements Exchange
     public function __construct(
         $name,
         ExchangeType $type,
-        array $parameters = null,
+        SplObjectStorage $parameters,
         AMQPChannel $channel
     ) {
         $this->name = $name;
         $this->type = $type;
-        $this->parameters = ExchangeParameter::adapt($parameters);
+        $this->parameters = $parameters;
         $this->channel = $channel;
     }
 
@@ -51,11 +53,21 @@ final class PalExchange implements Exchange
     /**
      * Get the exchange parameters.
      *
-     * @return array<ExchangeParameter> The exchange parameters.
+     * @return SplObjectStorage<ExchangeParameter, boolean> A map of parameter to on/off state.
      */
     public function parameters()
     {
         return $this->parameters;
+    }
+
+    /**
+     * Publish a message to this exchange.
+     *
+     * @param Message $message The message to publish.
+     */
+    public function publish(Message $message)
+    {
+        throw new \LogicException('Not implemented.');
     }
 
     private $name;

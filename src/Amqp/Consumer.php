@@ -19,7 +19,7 @@ interface Consumer
     /**
      * Get the consumer parameters.
      *
-     * @return array<ConsumerParameter> The consumer parameters.
+     * @return SplObjectStorage<ConsumerParameter, boolean> A map of parameter to on/off state.
      */
     public function parameters();
 

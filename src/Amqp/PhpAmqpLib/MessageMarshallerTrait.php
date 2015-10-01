@@ -23,7 +23,7 @@ trait MessageMarshallerTrait
         $amqpProperties = $message->get_properties();
 
         if (isset($amqpProperties['application_headers'])) {
-            $customProperties = $amqpProperties['application_headers']->getNativeData()
+            $customProperties = $amqpProperties['application_headers']->getNativeData();
             unset($amqpProperties['application_headers']);
         } else {
             $customProperties = [];

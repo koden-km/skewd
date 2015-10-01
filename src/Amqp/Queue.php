@@ -19,7 +19,7 @@ interface Queue
     /**
      * Get the queue parameters.
      *
-     * @return array<QueueParameter> The queue parameters.
+     * @return SplObjectStorage<QueueParameter, boolean> A map of parameter to on/off state.
      */
     public function parameters();
 
@@ -42,8 +42,8 @@ interface Queue
     /**
      * Publish a message directly to this queue.
      *
-     * This is a convenience method equivalent to publishing to the built-in
-     * nameless direct exchange with a routing key equal to the queue name.
+     * This is a convenience method equivalent to publishing to the pre-declared,
+     * nameless, direct exchange with a routing key equal to the queue name.
      *
      * @param Message $message The message to publish.
      */

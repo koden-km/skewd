@@ -33,7 +33,7 @@ final class ConsumerParameter extends AbstractEnumeration
      * that maps each paramter to a boolean indicating whether or not it was
      * present in $parameters.
      *
-     * If $parameters is null then the default parameters are returned.
+     * If $parameters is null then the default parameters (none) are returned.
      *
      * @param array<ConsumerParameter>|null $parameters The parameters sequence, or null to use the defaults.
      *

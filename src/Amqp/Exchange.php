@@ -25,7 +25,7 @@ interface Exchange
     /**
      * Get the parameters used when the exchange was declared.
      *
-     * @return array<ExchangeParameter> The exchange parameters.
+     * @return SplObjectStorage<ExchangeParameter, boolean> A map of parameter to on/off state.
      */
     public function parameters();
 
