@@ -1,7 +1,6 @@
 <?php
 namespace Skewd\Amqp\PhpAmqpLib;
 
-use LogicException;
 use PhpAmqpLib\Channel\AMQPChannel;
 use Skewd\Amqp\Consumer;
 use Skewd\Amqp\ConsumerParameter;
@@ -29,7 +28,6 @@ final class PalConsumer implements Consumer
         $this->parameters = $parameters;
         $this->tag = $tag;
         $this->channel = $channel;
-        $this->noAck = $this->parameters[ConsumerParameter::NO_ACK()];
     }
 
     /**
@@ -77,44 +75,6 @@ final class PalConsumer implements Consumer
     }
 
     /**
-     * Acknowledge a message.
-     *
-     * @param Message $message
-     *
-     * @throws ConnectionException if not connected to the AMQP server.
-     * @throws LogicException      if the message was not delivered via this consumer.
-     * @throws LogicException      if this consumer is using ConsumerParameter::NO_ACK.
-     */
-    public function ack(Message $message)
-    {
-        if ($this->noAck) {
-            throw new LogicException(
-                'Can not acknowledge message, consumer has NO_ACK property.'
-            );
-        }
-
-        $this->channel->basic_ack(
-            $message->amqpProperties()->get('delivery_tag')
-        );
-    }
-
-    /**
-     * Reject a message.
-     *
-     * @param Message $message
-     * @param boolean $requeue True to place the message back on the queue; otherwise, false.
-     *
-     * @throws ConnectionException if not connected to the AMQP server.
-     */
-    public function reject(Message $message, $requeue = true)
-    {
-        $this->channel->basic_reject(
-            $message->amqpProperties()->get('delivery_tag'),
-            $requeue
-        );
-    }
-
-    /**
      * Stop consuming messages.
      *
      * @throws ConnectionException if not connected to the AMQP server.
@@ -128,5 +88,4 @@ final class PalConsumer implements Consumer
     private $parameters;
     private $tag;
     private $channel;
-    private $noAck;
 }

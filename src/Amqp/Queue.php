@@ -63,7 +63,7 @@ interface Queue
      *
      * Invokes a callback when a message is received from this queue.
      *
-     * The callback signature is $callback(Consumer $consumer, Message $message).
+     * The callback signature is $callback(ConsumerMessage $message).
      *
      * @param callable                      $callback   The callback to invoke when a message is received.
      * @param array<ConsumerParameter>|null $parameters Parameters to set on the consumer, or null to use the defaults.

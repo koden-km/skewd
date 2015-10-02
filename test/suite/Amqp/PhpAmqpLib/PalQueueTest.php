@@ -11,7 +11,7 @@ use Skewd\Amqp\Exchange;
 use Skewd\Amqp\ExchangeType;
 use Skewd\Amqp\Message;
 use Skewd\Amqp\PublishOption;
-use SplObjectStorage;
+use Skewd\Amqp\QueueParameter;
 
 class PalQueueTest extends PHPUnit_Framework_TestCase
 {
@@ -20,6 +20,7 @@ class PalQueueTest extends PHPUnit_Framework_TestCase
 
     public function setUp()
     {
+        $this->parameters = QueueParameter::normalize(null);
         $this->channel = Phony::fullMock(AMQPChannel::class);
         $this->channel->basic_consume->does(
             function ($queue, $tag) {
@@ -30,8 +31,6 @@ class PalQueueTest extends PHPUnit_Framework_TestCase
                 return [$tag];
             }
         );
-
-        $this->parameters = new SplObjectStorage();
 
         $this->exchange = Phony::fullMock(Exchange::class);
         $this->exchange->name->returns('<exchange>');
@@ -235,8 +234,37 @@ class PalQueueTest extends PHPUnit_Framework_TestCase
         $handler($message);
 
         $callback->calledWith(
-            $result,
-            $this->toStandardMessage($message)
+            new PalConsumerMessage(
+                $result,
+                $message,
+                false,
+                $this->channel->mock()
+            )
+        );
+    }
+
+    public function testConsumeWithNoAck()
+    {
+        $callback = Phony::stub();
+
+        $result = $this->subject->consume(
+            $callback,
+            [ConsumerParameter::NO_ACK()]
+        );
+
+        // capture the message handler function passed to basic_consume() ...
+        $handler = $this->channel->basic_consume->called()->argument(6);
+
+        $message = new AMQPMessage();
+        $handler($message);
+
+        $callback->calledWith(
+            new PalConsumerMessage(
+                $result,
+                $message,
+                true,
+                $this->channel->mock()
+            )
         );
     }
 

@@ -141,7 +141,7 @@ final class PalQueue implements Queue
      *
      * Invokes a callback when a message is received from this queue.
      *
-     * The callback signature is $callback(Consumer $consumer, Message $message).
+     * The callback signature is $callback(ConsumerMessage $message).
      *
      * @param callable                      $callback   The callback to invoke when a message is received.
      * @param array<ConsumerParameter>|null $parameters Parameters to set on the consumer, or null to use the defaults.
@@ -164,19 +164,33 @@ final class PalQueue implements Queue
             $this->channel
         );
 
+        // cache no-ack value as it's used repeatedly ...
+        $noAck = $parameters[ConsumerParameter::NO_ACK()];
+
+        // callback for message delivery ...
+        $handler = function (AMQPMessage $message) use (
+            $consumer,
+            $callback,
+            $noAck
+        ) {
+            $callback(
+                new PalConsumerMessage(
+                    $consumer,
+                    $message,
+                    $noAck,
+                    $this->channel
+                )
+            );
+        };
+
         list($tag) = $this->channel->basic_consume(
             $this->name,
             $tag,
             $parameters[ConsumerParameter::NO_LOCAL()],
-            $parameters[ConsumerParameter::NO_ACK()],
+            $noAck,
             $parameters[ConsumerParameter::EXCLUSIVE()],
             false, // no-wait
-            function (AMQPMessage $message) use ($consumer, $callback) {
-                $callback(
-                    $consumer,
-                    $this->toStandardMessage($message)
-                );
-            }
+            $handler
         );
 
         $consumer->setTag($tag);
