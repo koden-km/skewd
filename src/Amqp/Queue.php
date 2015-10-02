@@ -26,18 +26,24 @@ interface Queue
     /**
      * Bind this queue to an exchange.
      *
-     * @param Exchange    $exchange   The exchange.
-     * @param string|null $routingKey The routing key, or null if the exchange type is FANOUT or HEADERS.
+     * @param Exchange $exchange   The exchange.
+     * @param string   $routingKey The routing key for DIRECT and TOPIC exchanges, or empty string for FANOUT and HEADERS exchanges.
+     *
+     * @throws ConnectionException      if not connected to the AMQP server.
+     * @throws InvalidArgumentException if a routing key is required but not provided, and vice-versa.
      */
-    public function bind(Exchange $exchange, $routingKey = null);
+    public function bind(Exchange $exchange, $routingKey = '');
 
     /**
      * Unbind this queue from an exchange.
      *
-     * @param Exchange    $exchange   The exchange.
-     * @param string|null $routingKey The routing key, or null if the exchange type is FANOUT or HEADERS.
+     * @param Exchange $exchange   The exchange.
+     * @param string   $routingKey The routing key for DIRECT and TOPIC exchanges, or empty string for FANOUT and HEADERS exchanges.
+     *
+     * @throws ConnectionException      if not connected to the AMQP server.
+     * @throws InvalidArgumentException if a routing key is required but not provided, and vice-versa.
      */
-    public function unbind(Exchange $exchange, $routingKey = null);
+    public function unbind(Exchange $exchange, $routingKey = '');
 
     /**
      * Publish a message directly to this queue.
@@ -55,10 +61,20 @@ interface Queue
     /**
      * Consume messages from this queue.
      *
+     * Invokes a callback when a message is received from this queue.
+     *
+     * The callback signature is $callback(Consumer $consumer, Message $message).
+     *
+     * @param callable                      $callback   The callback to invoke when a message is received.
      * @param array<ConsumerParameter>|null $parameters Parameters to set on the consumer, or null to use the defaults.
      * @param string                        $tag        A unique identifier for the consumer, or an empty string to have the server generate the consumer tag.
      *
      * @return Consumer
+     * @throws ConnectionException if not connected to the AMQP server.
      */
-    public function consume(array $parameters = null, $tag = '');
+    public function consume(
+        callable $callback,
+        array $parameters = null,
+        $tag = ''
+    );
 }

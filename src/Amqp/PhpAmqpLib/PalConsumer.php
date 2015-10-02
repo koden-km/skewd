@@ -1,10 +1,13 @@
 <?php
 namespace Skewd\Amqp\PhpAmqpLib;
 
+use LogicException;
 use PhpAmqpLib\Channel\AMQPChannel;
 use Skewd\Amqp\Consumer;
+use Skewd\Amqp\ConsumerParameter;
+use Skewd\Amqp\Message;
 use Skewd\Amqp\Queue;
-use SplQueue;
+use SplObjectStorage;
 
 /**
  * Please note that this code is not part of the public API. It may be changed
@@ -17,25 +20,26 @@ use SplQueue;
 final class PalConsumer implements Consumer
 {
     public function __construct(
-        array $parameters = null,
-        $tag = null,
         Queue $queue,
+        SplObjectStorage $parameters,
+        $tag,
         AMQPChannel $channel
     ) {
-        if (null === $parameters) {
-            $parameters = ConsumerParameter::defaults();
-        } else {
-            array_map(
-                function (ConsumerParameter $x) {},
-                $parameters
-            );
-        }
-
+        $this->queue = $queue;
         $this->parameters = $parameters;
         $this->tag = $tag;
-        $this->queue = $queue;
         $this->channel = $channel;
-        $this->message = new SplQueue();
+        $this->noAck = $this->parameters[ConsumerParameter::NO_ACK()];
+    }
+
+    /**
+     * Get the queue from which messages are consumed.
+     *
+     * @return Queue
+     */
+    public function queue()
+    {
+        return $this->queue;
     }
 
     /**
@@ -59,48 +63,38 @@ final class PalConsumer implements Consumer
     }
 
     /**
-     * Get the queue from which messages are consumed.
+     * Set the consumer tag.
      *
-     * @return Queue
-     */
-    public function queue()
-    {
-        return $this->queue;
-    }
-
-    /**
-     * Pop a message from the incoming message queue.
+     * Note that this method is not part of the Consumer interface, it is
+     * present to allow server-generated tags to bet set after the consumer is
+     * constructed.
      *
-     * @return Message|null The next message in the queue, or null if there are no messages waiting.
+     * @return string The consumer tag.
      */
-    public function pop()
+    public function setTag($tag)
     {
-        if ($this->messages->isEmpty()) {
-            return null;
-        }
-
-        return $this->messages->dequeue();
-    }
-
-    /**
-     * Push a message onto the incoming message queue.
-     *
-     * @param Message $message The message.
-     */
-    public function push(Message $message)
-    {
-        $this->messages->enqueue($message);
+        $this->tag = $tag;
     }
 
     /**
      * Acknowledge a message.
      *
      * @param Message $message
+     *
+     * @throws ConnectionException if not connected to the AMQP server.
+     * @throws LogicException      if the message was not delivered via this consumer.
+     * @throws LogicException      if this consumer is using ConsumerParameter::NO_ACK.
      */
     public function ack(Message $message)
     {
+        if ($this->noAck) {
+            throw new LogicException(
+                'Can not acknowledge message, consumer has NO_ACK property.'
+            );
+        }
+
         $this->channel->basic_ack(
-            $message->headers()->get('delivery_tag')
+            $message->amqpProperties()->get('delivery_tag')
         );
     }
 
@@ -109,18 +103,30 @@ final class PalConsumer implements Consumer
      *
      * @param Message $message
      * @param boolean $requeue True to place the message back on the queue; otherwise, false.
+     *
+     * @throws ConnectionException if not connected to the AMQP server.
      */
     public function reject(Message $message, $requeue = true)
     {
         $this->channel->basic_reject(
-            $message->headers()->get('delivery_tag'),
+            $message->amqpProperties()->get('delivery_tag'),
             $requeue
         );
     }
 
+    /**
+     * Stop consuming messages.
+     *
+     * @throws ConnectionException if not connected to the AMQP server.
+     */
+    public function cancel()
+    {
+        $this->channel->basic_cancel($this->tag);
+    }
+
+    private $queue;
     private $parameters;
     private $tag;
-    private $queue;
     private $channel;
-    private $messages;
+    private $noAck;
 }

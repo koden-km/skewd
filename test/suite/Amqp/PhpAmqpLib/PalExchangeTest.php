@@ -2,7 +2,7 @@
 namespace Skewd\Amqp\PhpAmqpLib;
 
 use Eloquent\Phony\Phpunit\Phony;
-use LogicException;
+use InvalidArgumentException;
 use PHPUnit_Framework_TestCase;
 use PhpAmqpLib\Channel\AMQPChannel;
 use Skewd\Amqp\ExchangeType;
@@ -95,7 +95,7 @@ class PalExchangeTest extends PHPUnit_Framework_TestCase
     public function testPublishWithRoutingKeyWhenNotRequired()
     {
         $this->setExpectedException(
-            LogicException::class,
+            InvalidArgumentException::class,
             'Routing key must be empty for FANOUT exchanges.'
         );
 
@@ -115,7 +115,7 @@ class PalExchangeTest extends PHPUnit_Framework_TestCase
         );
 
         $this->setExpectedException(
-            LogicException::class,
+            InvalidArgumentException::class,
             'Routing key must be provided for DIRECT exchanges.'
         );
 

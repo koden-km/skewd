@@ -30,7 +30,7 @@ final class Message
             $customProperties = AttributeCollection::create($customProperties);
         }
 
-         return new self(
+        return new self(
             $payload,
             $amqpProperties,
             $customProperties

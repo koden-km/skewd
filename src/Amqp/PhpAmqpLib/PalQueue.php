@@ -1,10 +1,13 @@
 <?php
 namespace Skewd\Amqp\PhpAmqpLib;
 
+use InvalidArgumentException;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Message\AMQPMessage;
+use Skewd\Amqp\ConsumerParameter;
 use Skewd\Amqp\Exchange;
 use Skewd\Amqp\Message;
+use Skewd\Amqp\PublishOption;
 use Skewd\Amqp\Queue;
 use Skewd\Amqp\QueueParameter;
 use SplObjectStorage;
@@ -52,11 +55,26 @@ final class PalQueue implements Queue
     /**
      * Bind this queue to an exchange.
      *
-     * @param Exchange    $exchange   The exchange.
-     * @param string|null $routingKey The routing key, or null if the exchange type is FANOUT or HEADERS.
+     * @param Exchange $exchange   The exchange.
+     * @param string   $routingKey The routing key for DIRECT and TOPIC exchanges, or empty string for FANOUT and HEADERS exchanges.
+     *
+     * @throws ConnectionException      if not connected to the AMQP server.
+     * @throws InvalidArgumentException if a routing key is required but not provided, and vice-versa.
      */
-    public function bind(Exchange $exchange, $routingKey = null)
+    public function bind(Exchange $exchange, $routingKey = '')
     {
+        if ($exchange->type()->requiresRoutingKey()) {
+            if ('' === $routingKey) {
+                throw new InvalidArgumentException(
+                    'Routing key must be provided for ' . $exchange->type()->key() . ' exchanges.'
+                );
+            }
+        } elseif ('' !== $routingKey) {
+            throw new InvalidArgumentException(
+                'Routing key must be empty for ' . $exchange->type()->key() . ' exchanges.'
+            );
+        }
+
         $this->channel->queue_bind(
             $this->name,
             $exchange->name(),
@@ -67,12 +85,31 @@ final class PalQueue implements Queue
     /**
      * Unbind this queue from an exchange.
      *
-     * @param Exchange    $exchange   The exchange.
-     * @param string|null $routingKey The routing key, or null if the exchange type is FANOUT or HEADERS.
+     * @param Exchange $exchange   The exchange.
+     * @param string   $routingKey The routing key for DIRECT and TOPIC exchanges, or empty string for FANOUT and HEADERS exchanges.
+     *
+     * @throws ConnectionException      if not connected to the AMQP server.
+     * @throws InvalidArgumentException if a routing key is required but not provided, and vice-versa.
      */
-    public function unbind(Exchange $exchange, $routingKey = null)
+    public function unbind(Exchange $exchange, $routingKey = '')
     {
-        throw new \LogicException('Not implemented.');
+        if ($exchange->type()->requiresRoutingKey()) {
+            if ('' === $routingKey) {
+                throw new InvalidArgumentException(
+                    'Routing key must be provided for ' . $exchange->type()->key() . ' exchanges.'
+                );
+            }
+        } elseif ('' !== $routingKey) {
+            throw new InvalidArgumentException(
+                'Routing key must be empty for ' . $exchange->type()->key() . ' exchanges.'
+            );
+        }
+
+        $this->channel->queue_unbind(
+            $this->name,
+            $exchange->name(),
+            $routingKey
+        );
     }
 
     /**
@@ -88,42 +125,61 @@ final class PalQueue implements Queue
      */
     public function publish(Message $message, array $options = null)
     {
-        throw new \LogicException('Not implemented.');
+        $options = PublishOption::normalize($options);
+
+        $this->channel->basic_publish(
+            $this->fromStandardMessage($message),
+            '',
+            $this->name,
+            $options[PublishOption::MANDATORY()],
+            $options[PublishOption::IMMEDIATE()]
+        );
     }
 
     /**
      * Consume messages from this queue.
      *
+     * Invokes a callback when a message is received from this queue.
+     *
+     * The callback signature is $callback(Consumer $consumer, Message $message).
+     *
+     * @param callable                      $callback   The callback to invoke when a message is received.
      * @param array<ConsumerParameter>|null $parameters Parameters to set on the consumer, or null to use the defaults.
-     * @param string                        $tag        A unique identifier for the consumer, or an empty string to have the server generated the consumer tag.
+     * @param string                        $tag        A unique identifier for the consumer, or an empty string to have the server generate the consumer tag.
      *
      * @return Consumer
+     * @throws ConnectionException if not connected to the AMQP server.
      */
-    public function consume(array $parameters = null, $tag = '')
-    {
-        $parameters = ConsumerParameter::adapt($parameters);
-        $consumer = null;
+    public function consume(
+        callable $callback,
+        array $parameters = null,
+        $tag = ''
+    ) {
+        $parameters = ConsumerParameter::normalize($parameters);
+
+        $consumer = new PalConsumer(
+            $this,
+            $parameters,
+            $tag,
+            $this->channel
+        );
 
         list($tag) = $this->channel->basic_consume(
             $this->name,
             $tag,
-            in_array(ConsumerParameter::NO_LOCAL(), $parameters, true),
-            in_array(ConsumerParameter::NO_ACK(), $parameters, true),
-            in_array(ConsumerParameter::EXCLUSIVE(), $parameters, true),
-            false,
-            function (AMQPMessage $message) use (&$consumer) {
-                $consumer->push(
+            $parameters[ConsumerParameter::NO_LOCAL()],
+            $parameters[ConsumerParameter::NO_ACK()],
+            $parameters[ConsumerParameter::EXCLUSIVE()],
+            false, // no-wait
+            function (AMQPMessage $message) use ($consumer, $callback) {
+                $callback(
+                    $consumer,
                     $this->toStandardMessage($message)
                 );
             }
         );
 
-        // Assign to $consumer as it's captured by the closure above ...
-        $consumer = new PhpAmqpLibConsumer(
-            $parameters,
-            $tag,
-            $this->channel
-        );
+        $consumer->setTag($tag);
 
         return $consumer;
     }

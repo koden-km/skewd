@@ -19,7 +19,6 @@ class PalChannelTest extends PHPUnit_Framework_TestCase
     public function setUp()
     {
         $this->channel = Phony::fullMock(AMQPChannel::class);
-
         $this->channel->queue_declare->does(
             function ($name) {
                 if ($name === '') {

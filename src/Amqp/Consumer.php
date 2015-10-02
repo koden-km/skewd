@@ -31,16 +31,13 @@ interface Consumer
     public function tag();
 
     /**
-     * Pop a message from the message queue.
-     *
-     * @return Message|null The next message in the queue, or null if there are no messages waiting for this consumer.
-     */
-    public function pop();
-
-    /**
      * Acknowledge a message.
      *
      * @param Message $message
+     *
+     * @throws ConnectionException if not connected to the AMQP server.
+     * @throws LogicException      if the message was not delivered via this consumer.
+     * @throws LogicException      if this consumer is using ConsumerParameter::NO_ACK.
      */
     public function ack(Message $message);
 
@@ -49,11 +46,15 @@ interface Consumer
      *
      * @param Message $message
      * @param boolean $requeue True to place the message back on the queue; otherwise, false.
+     *
+     * @throws ConnectionException if not connected to the AMQP server.
      */
     public function reject(Message $message, $requeue = true);
 
     /**
      * Stop consuming messages.
+     *
+     * @throws ConnectionException if not connected to the AMQP server.
      */
     public function cancel();
 }
