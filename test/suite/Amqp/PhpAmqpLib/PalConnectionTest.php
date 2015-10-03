@@ -23,6 +23,12 @@ class PalConnectionTest extends PHPUnit_Framework_TestCase
         );
     }
 
+    public function testCloseOnDestruct()
+    {
+        $this->subject = null;
+        $this->connection->close->called();
+    }
+
     public function testIsConnected()
     {
         $this->assertTrue(

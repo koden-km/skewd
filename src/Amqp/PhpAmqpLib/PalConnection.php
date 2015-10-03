@@ -23,6 +23,11 @@ final class PalConnection implements Connection
         $this->connection = $connection;
     }
 
+    public function __destruct()
+    {
+        $this->close();
+    }
+
     /**
      * Check if the connection is still established.
      *

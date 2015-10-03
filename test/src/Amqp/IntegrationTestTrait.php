@@ -2,20 +2,26 @@
 namespace Skewd\Amqp;
 
 use Eloquent\Phony\Phony;
+use Skewd\Amqp\Connection\ConnectionException;
 
 trait IntegrationTestTrait
 {
     public function setUp()
     {
         $this->connector = $this->createConnector();
+
+        try {
+            $this->connection = $this->connector->connect();
+        } catch (ConnectionException $e) {
+            $this->markTestSkipped($e->getMessage());
+        }
     }
 
     abstract public function createConnector();
 
     public function testConsume()
     {
-        $connection = $this->connector->connect();
-        $channel = $connection->channel();
+        $channel = $this->connection->channel();
 
         $message = Message::create('Hello, world!');
 
