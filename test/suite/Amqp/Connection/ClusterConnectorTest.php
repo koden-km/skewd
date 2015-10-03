@@ -2,8 +2,8 @@
 namespace Skewd\Amqp\Connection;
 
 use Eloquent\Phony\Phpunit\Phony;
-use Exception;
 use Icecave\Isolator\Isolator;
+use InvalidArgumentException;
 use PHPUnit_Framework_TestCase;
 
 class ClusterConnectorTest extends PHPUnit_Framework_TestCase
@@ -110,12 +110,20 @@ class ClusterConnectorTest extends PHPUnit_Framework_TestCase
     public function testConstructorWithNoConnectors()
     {
         $this->setExpectedException(
-            Exception::class,
-            'Argument 1 passed to '
-            . ClusterConnector::class . '::' . __NAMESPACE__ . '\{closure}() must implement interface '
-            . Connector::class . ', none given'
+            InvalidArgumentException::class,
+            'At least one connector must be provided.'
         );
 
         new ClusterConnector([]);
+    }
+
+    public function testConstructorWithInvalidType()
+    {
+        $this->setExpectedException(
+            InvalidArgumentException::class,
+            'Connectors must be instances of ' . Connector::class
+        );
+
+        new ClusterConnector(['<not-a-connector>']);
     }
 }

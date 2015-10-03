@@ -2,6 +2,7 @@
 namespace Skewd\Amqp\Connection;
 
 use Icecave\Isolator\IsolatorTrait;
+use InvalidArgumentException;
 
 /**
  * A connector for connecting to one AMQP server within a cluster.
@@ -65,10 +66,19 @@ final class ClusterConnector implements Connector
      */
     public function __construct(array $connectors)
     {
-        call_user_func_array(
-            function (Connector $x, Connector ...$x) {},
-            $connectors
-        );
+        if (!$connectors) {
+            throw new InvalidArgumentException(
+                'At least one connector must be provided.'
+            );
+        }
+
+        foreach ($connectors as $connector) {
+            if (!$connector instanceof Connector) {
+                throw new InvalidArgumentException(
+                    'Connectors must be instances of ' . Connector::class . '.'
+                );
+            }
+        }
 
         $this->connectors = $connectors;
     }
