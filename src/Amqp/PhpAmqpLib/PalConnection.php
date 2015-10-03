@@ -3,6 +3,7 @@ namespace Skewd\Amqp\PhpAmqpLib;
 
 use Exception;
 use PhpAmqpLib\Connection\AbstractConnection;
+use PhpAmqpLib\Exception\AMQPTimeoutException;
 use Skewd\Amqp\Connection\Connection;
 use Skewd\Amqp\Connection\ConnectionException;
 use Skewd\Amqp\Connection\ConnectionWaitResult;
@@ -112,10 +113,21 @@ final class PalConnection implements Connection
         }
 
         foreach ($this->connection->channels as $channel) {
-            $channel->wait(
-                null, // allowed methods
-                true  // non-blocking
-            );
+            try {
+                $channel->wait(
+                    null, // allowed methods
+                    true, // non-blocking
+                    1e-7  // timeout (must be non-zero, see below)
+                );
+            } catch (AMQPTimeoutException $e) {
+                // PhpAmqpLib treats a timeout of zero specially. It bypasses
+                // the stream_select() call, but then calls read() anyway,
+                // blocking until more data is available.
+                //
+                // By using a very low timeout value, we bypass the special
+                // handling of zero, so instead of the blocking read() call, we
+                // get an AMQPTimeoutException, which we promptly ignore :)
+            }
         }
 
         return ConnectionWaitResult::READY();

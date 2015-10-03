@@ -139,7 +139,8 @@ class PalConnectionTest extends PHPUnit_Framework_TestCase
 
         $this->channel->wait->calledWith(
             null, // allowed methods
-            true  // non-blocking
+            true, // non-blocking
+            1e-7  // timeout - must be non-zero, see comments in PalConnection::wait()
         );
     }
 

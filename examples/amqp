@@ -2,20 +2,36 @@
 <?php
 require __DIR__ . '/../vendor/autoload.php';
 
+// define('AMQP_DEBUG', true);
+
 Eloquent\Asplode\Asplode::install();
 
 use Icecave\Stump\Logger;
 use Skewd\Amqp\ExchangeType;
+use Skewd\Amqp\Message;
 use Skewd\Amqp\PhpAmqpLib\PalConnector;
+use Skewd\Amqp\QueueParameter;
 
 $connector = PalConnector::create();
 $connection = $connector->connect();
 $channel = $connection->channel();
+$queue = $channel->queue();
 
-try {
-    $exchange = $channel->exchange('abc', ExchangeType::FANOUT());
-} catch (Exception $e) {
-    echo 'Exception Code: ' . $e->getCode() . PHP_EOL;
+$message = Message::create('Hello, world!');
 
-    throw $e;
-}
+$queue->publish($message);
+
+$done = false;
+$queue->consume(
+    function ($cm) use ($message, &$done) {
+        var_dump($cm);
+        // $this->assertEquals(
+        //     $message,
+        //     $cm->message()
+        // );
+
+        // $done = true;
+    }
+);
+
+$connection->wait(1);
