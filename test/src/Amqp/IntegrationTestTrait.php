@@ -21,17 +21,22 @@ trait IntegrationTestTrait
 
     public function testConsume()
     {
+        // create the queue ...
         $channel = $this->connection->channel();
+        $queue = $channel->queue();
 
+        // publish the message ...
         $message = Message::create('Hello, world!');
-
-        $queue = $channel->queue('', [QueueParameter::EXCLUSIVE(), QueueParameter::AUTO_DELETE()]);
         $queue->publish($message);
 
+        // enable the consumer ...
         $callback = Phony::stub();
         $queue->consume($callback);
-        $connection->wait(1);
 
+        // wait for activity ...
+        $this->connection->wait(0.5);
+
+        // verify that the callback was invoked and capture the message ...
         $consumerMessage = $callback->called()->argument(0);
 
         $this->assertInstanceOf(
