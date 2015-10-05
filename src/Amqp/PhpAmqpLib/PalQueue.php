@@ -3,6 +3,7 @@ namespace Skewd\Amqp\PhpAmqpLib;
 
 use InvalidArgumentException;
 use PhpAmqpLib\Channel\AMQPChannel;
+use PhpAmqpLib\Exception\AMQPProtocolChannelException;
 use PhpAmqpLib\Message\AMQPMessage;
 use Skewd\Amqp\Channel;
 use Skewd\Amqp\ConsumerParameter;
@@ -11,6 +12,8 @@ use Skewd\Amqp\Message;
 use Skewd\Amqp\PublishOption;
 use Skewd\Amqp\Queue;
 use Skewd\Amqp\QueueParameter;
+use Skewd\Amqp\ResourceLockedException;
+use Skewd\Amqp\ResourceNotFoundException;
 use SplObjectStorage;
 
 /**
@@ -151,6 +154,8 @@ final class PalQueue implements Queue
      * @param string                        $tag        A unique identifier for the consumer, or an empty string to have the server generate the consumer tag.
      *
      * @return Consumer
+     * @throws ResourceLockedException if another connection has an exclusive consumer.
+     * @throws ResourceNotFoundException if the queue does not exist on the server.
      * @throws ConnectionException if not connected to the AMQP server.
      */
     public function consume(
@@ -186,15 +191,31 @@ final class PalQueue implements Queue
             );
         };
 
-        list($tag) = $this->internalChannel->basic_consume(
-            $this->name,
-            $tag,
-            $parameters[ConsumerParameter::NO_LOCAL()],
-            $noAck,
-            $parameters[ConsumerParameter::EXCLUSIVE()],
-            false, // no-wait
-            $handler
-        );
+        try {
+            $tag = $this->internalChannel->basic_consume(
+                $this->name,
+                $tag,
+                $parameters[ConsumerParameter::NO_LOCAL()],
+                $noAck,
+                $parameters[ConsumerParameter::EXCLUSIVE()],
+                false, // no-wait
+                $handler
+            );
+        } catch (AMQPProtocolChannelException $e) {
+            if (AmqpConstant::NOT_FOUND === $e->getCode()) {
+                throw ResourceNotFoundException::queueNotFound(
+                    $this->name,
+                    $e
+                );
+            } elseif (AmqpConstant::ACCESS_REFUSED === $e->getCode()) {
+                throw ResourceLockedException::queueHasExclusiveConsumer(
+                    $this->name,
+                    $e
+                );
+            }
+
+            throw $e;
+        }
 
         $consumer->setTag($tag);
 
