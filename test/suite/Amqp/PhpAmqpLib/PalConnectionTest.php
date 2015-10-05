@@ -185,7 +185,7 @@ class PalConnectionTest extends PHPUnit_Framework_TestCase
         $this
             ->channel
             ->wait
-            ->throws(new AMQPTimeoutException)
+            ->throws(new AMQPTimeoutException())
             ->returns(null);
 
         $this->connection->select->returns(1);

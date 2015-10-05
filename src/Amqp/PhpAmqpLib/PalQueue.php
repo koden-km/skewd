@@ -154,9 +154,9 @@ final class PalQueue implements Queue
      * @param string                        $tag        A unique identifier for the consumer, or an empty string to have the server generate the consumer tag.
      *
      * @return Consumer
-     * @throws ResourceLockedException if another connection has an exclusive consumer.
+     * @throws ResourceLockedException   if another connection has an exclusive consumer.
      * @throws ResourceNotFoundException if the queue does not exist on the server.
-     * @throws ConnectionException if not connected to the AMQP server.
+     * @throws ConnectionException       if not connected to the AMQP server.
      */
     public function consume(
         callable $callback,

@@ -2,13 +2,7 @@
 namespace Skewd\Lock;
 
 use Eloquent\Phony\Phpunit\Phony;
-use Exception;
 use PHPUnit_Framework_TestCase;
-use PhpAmqpLib\Channel\AMQPChannel;
-use PhpAmqpLib\Exception\AMQPExceptionInterface;
-use PhpAmqpLib\Exception\AMQPProtocolChannelException;
-use Psr\Log\LoggerInterface;
-use ReflectionProperty;
 use Skewd\Amqp\Channel;
 use Skewd\Amqp\Connection\Connection;
 use Skewd\Amqp\Consumer;
@@ -17,7 +11,6 @@ use Skewd\Amqp\Queue;
 use Skewd\Amqp\QueueParameter;
 use Skewd\Amqp\ResourceLockedException;
 use Skewd\Amqp\ResourceNotFoundException;
-use Skewd\Common\Node\Node;
 
 class AmqpResourceTest extends PHPUnit_Framework_TestCase
 {

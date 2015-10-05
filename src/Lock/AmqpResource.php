@@ -19,7 +19,7 @@ final class AmqpResource implements Lockable
 {
     /**
      * @param Connection $connection The AMQP connection.
-     * @param string $name The resource name.
+     * @param string     $name       The resource name.
      */
     public function __construct(Connection $connection, $name)
     {
@@ -32,7 +32,7 @@ final class AmqpResource implements Lockable
      *
      * @param LockMode $mode The lock mode to use.
      *
-     * @return Lock The acquired lock.
+     * @return Lock          The acquired lock.
      * @throws LockException if the resource could not be locked.
      */
     public function acquireLock(LockMode $mode)
@@ -86,8 +86,8 @@ final class AmqpResource implements Lockable
     /**
      * Attempt to acquire a lock on this object.
      *
-     * @param LockMode $mode The lock mode to use.
-     * @param Lock &$lock Assigned the acquired lock, if successful.
+     * @param LockMode $mode  The lock mode to use.
+     * @param Lock     &$lock Assigned the acquired lock, if successful.
      *
      * @return boolean True if the lock was acquired; otherwise, false.
      */
