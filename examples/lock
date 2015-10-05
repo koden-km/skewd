@@ -2,10 +2,10 @@
 <?php
 require __DIR__ . '/amqp.php';
 
-use Skewd\Lock\AmqpLockableFactory;
+use Skewd\Lock\AmqpResourceFactory;
 use Skewd\Lock\LockMode;
 
-$factory = AmqpLockableFactory::create($connection);
+$factory = AmqpResourceFactory::create($connection);
 $resource = $factory->createResource('test');
 
 if (in_array('-x', $_SERVER['argv'])) {
