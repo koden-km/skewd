@@ -11,7 +11,8 @@ use RuntimeException;
 final class ResourceLockedException extends RuntimeException
 {
     /**
-     * Create a queue-related resource locked exception.
+     * A queue could not be declared because another connection has already
+     * declared it using QueueParameter::EXCLUSIVE().
      *
      * @param string         $name     The name of the queue.
      * @param Exception|null $previous The exception that caused this exception, if any.
@@ -22,6 +23,24 @@ final class ResourceLockedException extends RuntimeException
     {
         return new self(
             'Failed to declare queue "' . $name . '", another connection has exclusive access.',
+            0,
+            $previous
+        );
+    }
+
+    /**
+     * A consumer could not be started because another connection is already
+     * consuming from the same queue with ConsumerParameter::EXCLUSIVE().
+     *
+     * @param string         $name     The name of the queue.
+     * @param Exception|null $previous The exception that caused this exception, if any.
+     *
+     * @return DeclareException
+     */
+    public static function queueHasExclusiveConsumer($name, Exception $previous = null)
+    {
+        return new self(
+            'Failed to consume from queue "' . $name . '", another connection has an exclusive consumer.',
             0,
             $previous
         );

@@ -5,7 +5,9 @@ use Eloquent\Phony\Phpunit\Phony;
 use InvalidArgumentException;
 use PHPUnit_Framework_TestCase;
 use PhpAmqpLib\Channel\AMQPChannel;
+use PhpAmqpLib\Exception\AMQPProtocolChannelException;
 use PhpAmqpLib\Message\AMQPMessage;
+use ReflectionProperty;
 use Skewd\Amqp\Channel;
 use Skewd\Amqp\ConsumerParameter;
 use Skewd\Amqp\Exchange;
@@ -13,6 +15,8 @@ use Skewd\Amqp\ExchangeType;
 use Skewd\Amqp\Message;
 use Skewd\Amqp\PublishOption;
 use Skewd\Amqp\QueueParameter;
+use Skewd\Amqp\ResourceLockedException;
+use Skewd\Amqp\ResourceNotFoundException;
 
 class PalQueueTest extends PHPUnit_Framework_TestCase
 {
@@ -26,10 +30,10 @@ class PalQueueTest extends PHPUnit_Framework_TestCase
         $this->internalChannel->basic_consume->does(
             function ($queue, $tag) {
                 if ($tag === '') {
-                    return ['<server-generated>'];
+                    return '<server-generated>';
                 }
 
-                return [$tag];
+                return $tag;
             }
         );
 
@@ -319,6 +323,66 @@ class PalQueueTest extends PHPUnit_Framework_TestCase
             '<tag>',
             $result->tag()
         );
+    }
+
+    public function testConsumeWithNotFound()
+    {
+        // The AMQPProtocolChannelException constructor accesses global data
+        // which is not initialized unless there is an actual connection which
+        // makes it difficult to mock. Here, we bypass the constructor entirely
+        // and set the mocked exception code using reflection.
+        $exception = Phony::fullMock(AMQPProtocolChannelException::class, null)->mock();
+
+        $reflector = new ReflectionProperty(AMQPProtocolChannelException::class, 'code');
+        $reflector->setAccessible(true);
+        $reflector->setValue($exception, AmqpConstant::NOT_FOUND);
+
+        $this->internalChannel->basic_consume->throws($exception);
+
+        $this->setExpectedException(
+            ResourceNotFoundException::class,
+            'Queue "<name>" does not exist.'
+        );
+
+        $this->subject->consume(function () {});
+    }
+
+    public function testConsumeWithAccessRefused()
+    {
+        // The AMQPProtocolChannelException constructor accesses global data
+        // which is not initialized unless there is an actual connection which
+        // makes it difficult to mock. Here, we bypass the constructor entirely
+        // and set the mocked exception code using reflection.
+        $exception = Phony::fullMock(AMQPProtocolChannelException::class, null)->mock();
+
+        $reflector = new ReflectionProperty(AMQPProtocolChannelException::class, 'code');
+        $reflector->setAccessible(true);
+        $reflector->setValue($exception, AmqpConstant::ACCESS_REFUSED);
+
+        $this->internalChannel->basic_consume->throws($exception);
+
+        $this->setExpectedException(
+            ResourceLockedException::class,
+            'Failed to consume from queue "<name>", another connection has an exclusive consumer.'
+        );
+
+        $this->subject->consume(function () {});
+    }
+
+    public function testQueueWithOtherAmqpException()
+    {
+        // The AMQPProtocolChannelException constructor accesses global data
+        // which is not initialized unless there is an actual connection which
+        // makes it difficult to mock. Here, we bypass the constructor entirely.
+        $exception = Phony::fullMock(AMQPProtocolChannelException::class, null)->mock();
+
+        $this->internalChannel->basic_consume->throws($exception);
+
+        $this->setExpectedException(
+            AMQPProtocolChannelException::class
+        );
+
+        $this->subject->consume(function () {});
     }
 
     public function testConsumeWithDisconnection()
