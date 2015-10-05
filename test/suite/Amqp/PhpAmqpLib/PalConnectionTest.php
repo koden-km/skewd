@@ -6,6 +6,7 @@ use Exception;
 use PHPUnit_Framework_TestCase;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AbstractConnection;
+use PhpAmqpLib\Exception\AMQPTimeoutException;
 use Skewd\Amqp\Connection\ConnectionException;
 use Skewd\Amqp\Connection\ConnectionWaitResult;
 
@@ -130,23 +131,8 @@ class PalConnectionTest extends PHPUnit_Framework_TestCase
         $this->channel->noInteraction();
 
         $this->assertSame(
-            ConnectionWaitResult::READY(),
+            ConnectionWaitResult::NORMAL(),
             $result
-        );
-    }
-
-    public function testWaitCallsWaitOnInternalChannels()
-    {
-        $this->connection->select->returns(1);
-
-        $this->connection->mock()->channels[1] = $this->channel->mock();
-
-        $this->subject->wait(0);
-
-        $this->channel->wait->calledWith(
-            null, // allowed methods
-            true, // non-blocking
-            1e-7  // timeout - must be non-zero, see comments in PalConnection::wait()
         );
     }
 
@@ -167,6 +153,56 @@ class PalConnectionTest extends PHPUnit_Framework_TestCase
         $this->assertSame(
             ConnectionWaitResult::SIGNAL(),
             $this->subject->wait(0)
+        );
+    }
+
+    public function testWaitDispatchesBeforeSelect()
+    {
+        $this->connection->mock()->channels[1] = $this->channel->mock();
+
+        $result = $this->subject->wait(0);
+
+        $this->channel->wait->calledWith(
+            null, // allowed methods
+            true, // non-blocking
+            1e-7  // timeout - must be non-zero, see comments in PalConnection::wait()
+        );
+
+        $this->connection->select->never()->called();
+
+        $this->assertSame(
+            ConnectionWaitResult::NORMAL(),
+            $result
+        );
+    }
+
+    public function testWaitDispatchesAfterSelect()
+    {
+        $this->connection->mock()->channels[1] = $this->channel->mock();
+
+        // Make the channel timeout during the first dispatch(), so that wait
+        // does not bail early and instead proceeds to the select ...
+        $this
+            ->channel
+            ->wait
+            ->throws(new AMQPTimeoutException)
+            ->returns(null);
+
+        $this->connection->select->returns(1);
+
+        $result = $this->subject->wait(0);
+
+        $this->channel->wait->calledWith(
+            null, // allowed methods
+            true, // non-blocking
+            1e-7  // timeout - must be non-zero, see comments in PalConnection::wait()
+        );
+
+        $this->connection->select->called();
+
+        $this->assertSame(
+            ConnectionWaitResult::NORMAL(),
+            $result
         );
     }
 

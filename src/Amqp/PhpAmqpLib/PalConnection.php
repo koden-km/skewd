@@ -106,6 +106,13 @@ final class PalConnection implements Connection
             throw ConnectionException::notConnected();
         }
 
+        // Dispatch before calling select in case there's already actions queued
+        // in the channels' 'method queue' ...
+        if ($this->dispatch()) {
+            return ConnectionWaitResult::NORMAL();
+        }
+
+        // Otherwise, wait for activity ...
         $ready = @$this->connection->select(
             0,
             intval($timeout * 1000000)
@@ -117,6 +124,22 @@ final class PalConnection implements Connection
             return ConnectionWaitResult::SIGNAL();
         }
 
+        // Dispatch again if there was channel activity ...
+        $this->dispatch();
+
+        return ConnectionWaitResult::NORMAL();
+    }
+
+    /**
+     * Iteration through all open channels and call wait() so that their method
+     * queues / callbacks are dispatched.
+     *
+     * @return boolean True if any of the channels had activity.
+     */
+    private function dispatch()
+    {
+        $activity = false;
+
         foreach ($this->connection->channels as $channel) {
             try {
                 $channel->wait(
@@ -124,18 +147,21 @@ final class PalConnection implements Connection
                     true, // non-blocking
                     1e-7  // timeout (must be non-zero, see below)
                 );
+
+                $activity = true;
             } catch (AMQPTimeoutException $e) {
                 // PhpAmqpLib treats a timeout of zero specially. It bypasses
                 // the stream_select() call, but then calls read() anyway,
                 // blocking until more data is available.
                 //
                 // By using a very low timeout value, we bypass the special
-                // handling of zero, so instead of the blocking read() call, we
-                // get an AMQPTimeoutException, which we promptly ignore :)
+                // handling of zero, but still call select() with a zero timeout
+                // so instead of the blocking read() call, we get an
+                // AMQPTimeoutException, which we promptly ignore :)
             }
         }
 
-        return ConnectionWaitResult::READY();
+        return $activity;
     }
 
     private $connection;

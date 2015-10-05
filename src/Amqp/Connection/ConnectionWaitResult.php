@@ -13,7 +13,7 @@ final class ConnectionWaitResult extends AbstractEnumeration
     /**
      * Indicates that activity has occurred on the connection.
      */
-    const READY = 'ready';
+    const NORMAL = 'normal';
 
     /**
      * The wait operation timed out before activity occurred.
