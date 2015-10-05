@@ -15,14 +15,10 @@ if (in_array('-x', $_SERVER['argv'])) {
 }
 
 $result = false;
+$lock = null;
+$attempt = 0;
 
-for ($i = 0; $i < 1000; ++$i) {
-    $lock = null;
-
-    if ($result) {
-        usleep(0);
-    }
-
+while (true) {
     $result = $resource->tryAcquireLock($mode, $lock);
 
     if ($result) {
@@ -30,9 +26,9 @@ for ($i = 0; $i < 1000; ++$i) {
             'acquired %s @ %0.2f (#%d)' . PHP_EOL,
             $mode,
             microtime(true),
-            $i
+            ++$attempt
         );
-    }
 
-    usleep(0);
+        $lock->release();
+    }
 }
