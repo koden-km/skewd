@@ -201,6 +201,28 @@ final class PalChannel implements Channel
     }
 
     /**
+     * Set the channel's Quality-of-Service parameters.
+     *
+     * @param integer|null $count The number of un-acknowledged messages to accept, or null for no limit.
+     * @param integer|null $size  The total size of un-acknowledged messages to accept, in bytes, or null for no limit.
+     *
+     * @throws ConnectionException if not connected to the AMQP server.
+     * @throws LogicException      if the channel has been closed.
+     */
+    public function qos($count = null, $size = null)
+    {
+        if (!$this->channel) {
+            throw new LogicException('Channel is closed.');
+        }
+
+        $this->channel->basic_qos(
+            $size ?: 0,
+            $count ?: 0,
+            false
+        );
+    }
+
+    /**
      * Check if the channel is still open.
      *
      * @return boolean True if the channel is open; otherwise, false.

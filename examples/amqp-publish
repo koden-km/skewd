@@ -7,23 +7,27 @@ use Skewd\Amqp\Message;
 
 $queue = $channel->queue('test', []);
 
+$last = microtime(true);
+$counter = 0;
+$message = Message::create('');
+
 $done = false;
-
-pcntl_signal(
-    SIGINT,
-    function () use (&$done) {
-        $done = true;
-    }
-);
-
-$counter = 1;
+pcntl_signal(SIGINT, function () use (&$done) { $done = true; });
 
 while (!$done) {
-    if (ConnectionWaitResult::TIMEOUT() === $connection->wait(0.001)) {
-        $queue->publish(
-            Message::create('Message #' . $counter++)
-        );
+    $connection->wait(0);
+    pcntl_signal_dispatch();
+
+    $counter++;
+    $queue->publish($message);
+
+    $now = microtime(true);
+    $delta = $now - $last;
+    if ($delta >= 1) {
+        echo '--> ' . number_format($counter / $delta, 1) . ' messages/second' . PHP_EOL;
+        $last = $now;
+        $counter = 0;
     }
 
-    pcntl_signal_dispatch();
+    sleep(0);
 }

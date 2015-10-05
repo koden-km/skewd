@@ -80,6 +80,17 @@ interface Channel
     public function queue($name = '', array $parameters = null);
 
     /**
+     * Set the channel's Quality-of-Service parameters.
+     *
+     * @param integer|null $count The maximum number of un-acknowledged messages to accept.
+     * @param integer|null $size  The maximum size of un-acknowledged messages to accept, in bytes.
+     *
+     * @throws ConnectionException if not connected to the AMQP server.
+     * @throws LogicException      if the channel has been closed.
+     */
+    public function qos($count = null, $size = null);
+
+    /**
      * Check if the channel is still open.
      *
      * @return boolean True if the channel is open; otherwise, false.

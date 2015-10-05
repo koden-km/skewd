@@ -398,6 +398,37 @@ class PalChannelTest extends PHPUnit_Framework_TestCase
         $this->subject->queue();
     }
 
+    public function testQos()
+    {
+        $this->subject->qos(10, 20);
+
+        $this->channel->basic_qos->calledWith(20, 10, false);
+    }
+
+    public function testQosWithNull()
+    {
+        $this->subject->qos();
+
+        $this->channel->basic_qos->calledWith(0, 0, false);
+    }
+
+    public function testQosWithDisconnection()
+    {
+        $this->markTestIncomplete();
+    }
+
+    public function testQosWithClosedChannel()
+    {
+        $this->subject->close();
+
+        $this->setExpectedException(
+            LogicException::class,
+            'Channel is closed.'
+        );
+
+        $this->subject->qos(10, 20);
+    }
+
     public function testClose()
     {
         $this->assertTrue(

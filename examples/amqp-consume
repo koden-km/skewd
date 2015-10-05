@@ -4,6 +4,7 @@ require __DIR__ . '/amqp.php';
 
 use Skewd\Amqp\ConsumerParameter;
 
+$channel->qos(5); // pre-fetch count
 $queue = $channel->queue('test', []);
 
 function currentTime()
@@ -18,22 +19,29 @@ function currentTime()
 }
 
 $queue->consume(
-    function ($cm) {
-        echo currentTime() . ': received ' . $cm->message()->payload() . PHP_EOL;
-    },
-    [ConsumerParameter::NO_ACK()]
-);
-
-$done = false;
-
-pcntl_signal(
-    SIGINT,
-    function () use (&$done) {
-        $done = true;
+    function ($cm) use (&$counter) {
+        $cm->ack();
+        $counter++;
     }
 );
 
+$last = microtime(true);
+$counter = 0;
+
+$done = false;
+pcntl_signal(SIGINT, function () use (&$done) { $done = true; });
+
 while (!$done) {
-    $connection->wait(30);
+    $connection->wait(5);
     pcntl_signal_dispatch();
+
+    $now = microtime(true);
+    $delta = $now - $last;
+    if ($delta >= 1) {
+        echo '<-- ' . number_format($counter / $delta, 1) . ' messages/second' . PHP_EOL;
+        $last = $now;
+        $counter = 0;
+    }
+
+    sleep(0);
 }
