@@ -5,6 +5,7 @@ use Eloquent\Phony\Phpunit\Phony;
 use InvalidArgumentException;
 use PHPUnit_Framework_TestCase;
 use PhpAmqpLib\Channel\AMQPChannel;
+use Skewd\Amqp\Channel;
 use Skewd\Amqp\ExchangeParameter;
 use Skewd\Amqp\ExchangeType;
 use Skewd\Amqp\Message;
@@ -18,13 +19,15 @@ class PalExchangeTest extends PHPUnit_Framework_TestCase
     public function setUp()
     {
         $this->parameters = ExchangeParameter::normalize(null);
-        $this->channel = Phony::fullMock(AMQPChannel::class);
+        $this->internalChannel = Phony::fullMock(AMQPChannel::class);
+        $this->declaringChannel = Phony::fullMock(Channel::class);
 
         $this->subject = new PalExchange(
             '<name>',
             ExchangeType::FANOUT(),
             $this->parameters,
-            $this->channel->mock()
+            $this->internalChannel->mock(),
+            $this->declaringChannel->mock()
         );
     }
 
@@ -58,7 +61,7 @@ class PalExchangeTest extends PHPUnit_Framework_TestCase
 
         $this->subject->publish($message);
 
-        $this->channel->basic_publish->calledWith(
+        $this->internalChannel->basic_publish->calledWith(
             $this->fromStandardMessage($message),
             '<name>', // exchange
             '',       // routing key
@@ -83,7 +86,7 @@ class PalExchangeTest extends PHPUnit_Framework_TestCase
             $options
         );
 
-        $this->channel->basic_publish->calledWith(
+        $this->internalChannel->basic_publish->calledWith(
             $this->fromStandardMessage($message),
             '<name>', // exchange
             '',       // routing key
@@ -111,7 +114,8 @@ class PalExchangeTest extends PHPUnit_Framework_TestCase
             '<name>',
             ExchangeType::DIRECT(),
             $this->parameters,
-            $this->channel->mock()
+            $this->internalChannel->mock(),
+            $this->declaringChannel->mock()
         );
 
         $this->setExpectedException(

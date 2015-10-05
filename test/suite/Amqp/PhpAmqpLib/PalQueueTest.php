@@ -6,6 +6,7 @@ use InvalidArgumentException;
 use PHPUnit_Framework_TestCase;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Message\AMQPMessage;
+use Skewd\Amqp\Channel;
 use Skewd\Amqp\ConsumerParameter;
 use Skewd\Amqp\Exchange;
 use Skewd\Amqp\ExchangeType;
@@ -21,8 +22,8 @@ class PalQueueTest extends PHPUnit_Framework_TestCase
     public function setUp()
     {
         $this->parameters = QueueParameter::normalize(null);
-        $this->channel = Phony::fullMock(AMQPChannel::class);
-        $this->channel->basic_consume->does(
+        $this->internalChannel = Phony::fullMock(AMQPChannel::class);
+        $this->internalChannel->basic_consume->does(
             function ($queue, $tag) {
                 if ($tag === '') {
                     return ['<server-generated>'];
@@ -32,6 +33,8 @@ class PalQueueTest extends PHPUnit_Framework_TestCase
             }
         );
 
+        $this->declaringChannel = Phony::fullMock(Channel::class);
+
         $this->exchange = Phony::fullMock(Exchange::class);
         $this->exchange->name->returns('<exchange>');
         $this->exchange->type->returns(ExchangeType::DIRECT());
@@ -39,7 +42,8 @@ class PalQueueTest extends PHPUnit_Framework_TestCase
         $this->subject = new PalQueue(
             '<name>',
             $this->parameters,
-            $this->channel->mock()
+            $this->internalChannel->mock(),
+            $this->declaringChannel->mock()
         );
     }
 
@@ -66,7 +70,7 @@ class PalQueueTest extends PHPUnit_Framework_TestCase
             '<routing-key>'
         );
 
-        $this->channel->queue_bind->calledWith(
+        $this->internalChannel->queue_bind->calledWith(
             '<name>',
             '<exchange>',
             '<routing-key>'
@@ -112,7 +116,7 @@ class PalQueueTest extends PHPUnit_Framework_TestCase
             '<routing-key>'
         );
 
-        $this->channel->queue_unbind->calledWith(
+        $this->internalChannel->queue_unbind->calledWith(
             '<name>',
             '<exchange>',
             '<routing-key>'
@@ -157,7 +161,7 @@ class PalQueueTest extends PHPUnit_Framework_TestCase
 
         $this->subject->publish($message);
 
-        $this->channel->basic_publish->calledWith(
+        $this->internalChannel->basic_publish->calledWith(
             $this->fromStandardMessage($message),
             '',       // exchange
             '<name>', // routing key
@@ -181,7 +185,7 @@ class PalQueueTest extends PHPUnit_Framework_TestCase
             $options
         );
 
-        $this->channel->basic_publish->calledWith(
+        $this->internalChannel->basic_publish->calledWith(
             $this->fromStandardMessage($message),
             '',       // exchange
             '<name>', // routing key
@@ -201,7 +205,7 @@ class PalQueueTest extends PHPUnit_Framework_TestCase
 
         $result = $this->subject->consume($callback);
 
-        $call = $this->channel->basic_consume->calledWith(
+        $call = $this->internalChannel->basic_consume->calledWith(
             '<name>',
             '',    // tag
             false, // no-local
@@ -219,7 +223,7 @@ class PalQueueTest extends PHPUnit_Framework_TestCase
                 $this->subject,
                 ConsumerParameter::normalize(null), // defailts
                 '<server-generated>',
-                $this->channel->mock()
+                $this->internalChannel->mock()
             ),
             $result
         );
@@ -238,7 +242,7 @@ class PalQueueTest extends PHPUnit_Framework_TestCase
                 $result,
                 $message,
                 false,
-                $this->channel->mock()
+                $this->internalChannel->mock()
             )
         );
     }
@@ -253,7 +257,7 @@ class PalQueueTest extends PHPUnit_Framework_TestCase
         );
 
         // capture the message handler function passed to basic_consume() ...
-        $handler = $this->channel->basic_consume->called()->argument(6);
+        $handler = $this->internalChannel->basic_consume->called()->argument(6);
 
         $message = new AMQPMessage();
         $handler($message);
@@ -263,7 +267,7 @@ class PalQueueTest extends PHPUnit_Framework_TestCase
                 $result,
                 $message,
                 true,
-                $this->channel->mock()
+                $this->internalChannel->mock()
             )
         );
     }
@@ -282,7 +286,7 @@ class PalQueueTest extends PHPUnit_Framework_TestCase
             $properties
         );
 
-        $this->channel->basic_consume->calledWith(
+        $this->internalChannel->basic_consume->calledWith(
             '<name>',
             '',    // tag
             true,  // no-local
@@ -301,7 +305,7 @@ class PalQueueTest extends PHPUnit_Framework_TestCase
             '<tag>'
         );
 
-        $this->channel->basic_consume->calledWith(
+        $this->internalChannel->basic_consume->calledWith(
             '<name>',
             '<tag>',
             false, // no-local

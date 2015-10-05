@@ -83,7 +83,8 @@ final class PalChannel implements Channel
             $name,
             $type,
             $parameters,
-            $this->channel
+            $this->channel,
+            $this
         );
     }
 
@@ -112,7 +113,8 @@ final class PalChannel implements Channel
             '',
             ExchangeType::DIRECT(),
             ExchangeParameter::normalize([ExchangeParameter::DURABLE()]),
-            $this->channel
+            $this->channel,
+            $this
         );
     }
 
@@ -140,7 +142,8 @@ final class PalChannel implements Channel
             'amq.' . $type->value(),
             $type,
             ExchangeParameter::normalize([ExchangeParameter::DURABLE()]),
-            $this->channel
+            $this->channel,
+            $this
         );
     }
 
@@ -192,7 +195,8 @@ final class PalChannel implements Channel
         return new PalQueue(
             $name,
             $parameters,
-            $this->channel
+            $this->channel,
+            $this
         );
     }
 

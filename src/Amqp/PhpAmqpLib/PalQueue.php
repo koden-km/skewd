@@ -4,6 +4,7 @@ namespace Skewd\Amqp\PhpAmqpLib;
 use InvalidArgumentException;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Message\AMQPMessage;
+use Skewd\Amqp\Channel;
 use Skewd\Amqp\ConsumerParameter;
 use Skewd\Amqp\Exchange;
 use Skewd\Amqp\Message;
@@ -25,11 +26,13 @@ final class PalQueue implements Queue
     public function __construct(
         $name,
         SplObjectStorage $parameters,
-        AMQPChannel $channel
+        AMQPChannel $internalChannel,
+        Channel $declaringChannel
     ) {
         $this->name = $name;
         $this->parameters = $parameters;
-        $this->channel = $channel;
+        $this->internalChannel = $internalChannel;
+        $this->declaringChannel = $declaringChannel;
     }
 
     /**
@@ -75,7 +78,7 @@ final class PalQueue implements Queue
             );
         }
 
-        $this->channel->queue_bind(
+        $this->internalChannel->queue_bind(
             $this->name,
             $exchange->name(),
             $routingKey
@@ -105,7 +108,7 @@ final class PalQueue implements Queue
             );
         }
 
-        $this->channel->queue_unbind(
+        $this->internalChannel->queue_unbind(
             $this->name,
             $exchange->name(),
             $routingKey
@@ -127,7 +130,7 @@ final class PalQueue implements Queue
     {
         $options = PublishOption::normalize($options);
 
-        $this->channel->basic_publish(
+        $this->internalChannel->basic_publish(
             $this->fromStandardMessage($message),
             '',
             $this->name,
@@ -161,7 +164,7 @@ final class PalQueue implements Queue
             $this,
             $parameters,
             $tag,
-            $this->channel
+            $this->internalChannel
         );
 
         // cache no-ack value as it's used repeatedly ...
@@ -178,12 +181,12 @@ final class PalQueue implements Queue
                     $consumer,
                     $message,
                     $noAck,
-                    $this->channel
+                    $this->internalChannel
                 )
             );
         };
 
-        list($tag) = $this->channel->basic_consume(
+        list($tag) = $this->internalChannel->basic_consume(
             $this->name,
             $tag,
             $parameters[ConsumerParameter::NO_LOCAL()],
@@ -202,5 +205,6 @@ final class PalQueue implements Queue
 
     private $name;
     private $parameters;
-    private $channel;
+    private $internalChannel;
+    private $declaringChannel;
 }

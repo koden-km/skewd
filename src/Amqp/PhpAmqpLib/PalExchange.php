@@ -3,6 +3,7 @@ namespace Skewd\Amqp\PhpAmqpLib;
 
 use InvalidArgumentException;
 use PhpAmqpLib\Channel\AMQPChannel;
+use Skewd\Amqp\Channel;
 use Skewd\Amqp\Exchange;
 use Skewd\Amqp\ExchangeParameter;
 use Skewd\Amqp\ExchangeType;
@@ -24,12 +25,14 @@ final class PalExchange implements Exchange
         $name,
         ExchangeType $type,
         SplObjectStorage $parameters,
-        AMQPChannel $channel
+        AMQPChannel $internalChannel,
+        Channel $declaringChannel
     ) {
         $this->name = $name;
         $this->type = $type;
         $this->parameters = $parameters;
-        $this->channel = $channel;
+        $this->internalChannel = $internalChannel;
+        $this->declaringChannel = $declaringChannel;
     }
 
     /**
@@ -91,7 +94,7 @@ final class PalExchange implements Exchange
 
         $options = PublishOption::normalize($options);
 
-        $this->channel->basic_publish(
+        $this->internalChannel->basic_publish(
             $this->fromStandardMessage($message),
             $this->name,
             $routingKey,
@@ -105,5 +108,6 @@ final class PalExchange implements Exchange
     private $name;
     private $type;
     private $parameters;
-    private $channel;
+    private $internalChannel;
+    private $declaringChannel;
 }

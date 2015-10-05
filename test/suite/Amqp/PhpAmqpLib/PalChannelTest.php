@@ -69,7 +69,8 @@ class PalChannelTest extends PHPUnit_Framework_TestCase
                 '<name>',
                 $type,
                 ExchangeParameter::normalize(null), // defaults
-                $this->channel->mock()
+                $this->channel->mock(),
+                $this->subject
             ),
             $result
         );
@@ -104,7 +105,8 @@ class PalChannelTest extends PHPUnit_Framework_TestCase
                 '<name>',
                 ExchangeType::DIRECT(),
                 ExchangeParameter::normalize($properties),
-                $this->channel->mock()
+                $this->channel->mock(),
+                $this->subject
             ),
             $result
         );
@@ -181,7 +183,8 @@ class PalChannelTest extends PHPUnit_Framework_TestCase
                 '',
                 ExchangeType::DIRECT(),
                 ExchangeParameter::normalize([ExchangeParameter::DURABLE()]),
-                $this->channel->mock()
+                $this->channel->mock(),
+                $this->subject
             ),
             $this->subject->directExchange()
         );
@@ -214,7 +217,8 @@ class PalChannelTest extends PHPUnit_Framework_TestCase
                 $name,
                 $type,
                 ExchangeParameter::normalize([ExchangeParameter::DURABLE()]),
-                $this->channel->mock()
+                $this->channel->mock(),
+                $this->subject
             ),
             $this->subject->amqExchange($type)
         );
@@ -255,7 +259,8 @@ class PalChannelTest extends PHPUnit_Framework_TestCase
             new PalQueue(
                 '<server-generated>',
                 QueueParameter::normalize(null), // defaults
-                $this->channel->mock()
+                $this->channel->mock(),
+                $this->subject
             ),
             $result
         );
@@ -277,7 +282,8 @@ class PalChannelTest extends PHPUnit_Framework_TestCase
             new PalQueue(
                 '<name>',
                 QueueParameter::normalize(null), // defaults
-                $this->channel->mock()
+                $this->channel->mock(),
+                $this->subject
             ),
             $result
         );
@@ -308,7 +314,8 @@ class PalChannelTest extends PHPUnit_Framework_TestCase
             new PalQueue(
                 '<name>',
                 QueueParameter::normalize($properties),
-                $this->channel->mock()
+                $this->channel->mock(),
+                $this->subject
             ),
             $result
         );
