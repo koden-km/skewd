@@ -1,5 +1,5 @@
 <?php
-namespace Skewd\Common\Session;
+namespace Skewd\Session;
 
 /**
  * An in-memory session store.

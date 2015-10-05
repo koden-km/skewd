@@ -1,5 +1,5 @@
 <?php
-namespace Skewd\Common\Session;
+namespace Skewd\Session;
 
 /**
  * A storage system for sessions.

@@ -1,5 +1,5 @@
 <?php
-namespace Skewd\Common\Session;
+namespace Skewd\Session;
 
 use PHPUnit_Framework_TestCase;
 

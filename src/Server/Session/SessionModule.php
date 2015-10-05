@@ -2,10 +2,10 @@
 namespace Skewd\Server\Session;
 
 use Skewd\Common\Messaging\Node;
-use Skewd\Common\Session\InMemorySessionStore;
-use Skewd\Common\Session\SessionStore;
 use Skewd\Server\Application\Application;
 use Skewd\Server\Application\Module;
+use Skewd\Session\InMemorySessionStore;
+use Skewd\Session\SessionStore;
 
 /**
  * A module provides functionality to an modular application.
