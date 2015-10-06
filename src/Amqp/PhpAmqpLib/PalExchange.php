@@ -21,6 +21,13 @@ use SplObjectStorage;
  */
 final class PalExchange implements Exchange
 {
+    /**
+     * @param string           $name
+     * @param ExchangeType     $type
+     * @param SplObjectStorage $parameters
+     * @param AMQPChannel      $internalChannel
+     * @param Channel          $declaringChannel
+     */
     public function __construct(
         $name,
         ExchangeType $type,

@@ -12,6 +12,11 @@ use Skewd\Session\SessionStore;
  */
 final class SessionModule implements Module
 {
+    /**
+     * @param SessionStore|null $sessionStore
+     *
+     * @return SessionModule
+     */
     public static function create(SessionStore $sessionStore = null)
     {
         return new self($sessionStore);
@@ -86,6 +91,9 @@ final class SessionModule implements Module
     {
     }
 
+    /**
+     * @param SessionStore|null $sessionStore
+     */
     public function __construct(SessionStore $sessionStore = null)
     {
         $this->sessionStore = $sessionStore ?: InMemorySessionStore::create();

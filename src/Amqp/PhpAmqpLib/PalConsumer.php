@@ -18,6 +18,12 @@ use SplObjectStorage;
  */
 final class PalConsumer implements Consumer
 {
+    /**
+     * @param Queue            $queue
+     * @param SplObjectStorage $parameters
+     * @param string           $tag
+     * @param AMQPChannel      $channel
+     */
     public function __construct(
         Queue $queue,
         SplObjectStorage $parameters,
@@ -64,10 +70,10 @@ final class PalConsumer implements Consumer
      * Set the consumer tag.
      *
      * Note that this method is not part of the Consumer interface, it is
-     * present to allow server-generated tags to bet set after the consumer is
+     * present to allow server-generated tags to get set after the consumer is
      * constructed.
      *
-     * @return string The consumer tag.
+     * @param string $tag The consumer tag.
      */
     public function setTag($tag)
     {

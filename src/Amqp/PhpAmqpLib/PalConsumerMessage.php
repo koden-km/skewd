@@ -20,6 +20,12 @@ use Skewd\Amqp\Queue;
  */
 final class PalConsumerMessage implements ConsumerMessage
 {
+    /**
+     * @param Consumer    $consumer
+     * @param AMQPMessage $message
+     * @param bool        $noAck
+     * @param AMQPChannel $channel
+     */
     public function __construct(
         Consumer $consumer,
         AMQPMessage $message,

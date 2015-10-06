@@ -21,6 +21,9 @@ use Skewd\Amqp\ResourceLockedException;
  */
 final class PalChannel implements Channel
 {
+    /**
+     * @param AMQPChannel $channel
+     */
     public function __construct(AMQPChannel $channel)
     {
         $this->channel = $channel;

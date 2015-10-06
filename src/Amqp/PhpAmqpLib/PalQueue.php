@@ -26,6 +26,12 @@ use SplObjectStorage;
  */
 final class PalQueue implements Queue
 {
+    /**
+     * @param string           $name
+     * @param SplObjectStorage $parameters
+     * @param AMQPChannel      $internalChannel
+     * @param Channel          $declaringChannel
+     */
     public function __construct(
         $name,
         SplObjectStorage $parameters,

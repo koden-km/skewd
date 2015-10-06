@@ -18,6 +18,9 @@ use Skewd\Amqp\Connection\ConnectionWaitResult;
  */
 final class PalConnection implements Connection
 {
+    /**
+     * @param AbstractConnection $connection
+     */
     public function __construct(AbstractConnection $connection)
     {
         $this->connection = $connection;
@@ -67,8 +70,7 @@ final class PalConnection implements Connection
     /**
      * Create a new AMQP channel.
      *
-     * @return Channel The newly created channel.
-     *
+     * @return Channel             The newly created channel.
      * @throws ConnectionException if not connected to the AMQP server.
      */
     public function channel()

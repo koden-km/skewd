@@ -24,7 +24,6 @@ interface Connection
      * Create a new AMQP channel.
      *
      * @return Channel The newly created channel.
-     *
      * @throws ConnectionException if not connected to the AMQP server.
      */
     public function channel();

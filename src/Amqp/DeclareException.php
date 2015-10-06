@@ -25,8 +25,8 @@ final class DeclareException extends RuntimeException
         $name,
         ExchangeType $type,
         SplObjectStorage $parameters,
-        Exception $previous = null)
-    {
+        Exception $previous = null
+    ) {
         $parameterKeys = [];
 
         foreach ($parameters as $parameter) {
@@ -60,8 +60,8 @@ final class DeclareException extends RuntimeException
     public static function queueParameterMismatch(
         $name,
         SplObjectStorage $parameters,
-        Exception $previous = null)
-    {
+        Exception $previous = null
+    ) {
         $parameterKeys = [];
 
         foreach ($parameters as $parameter) {

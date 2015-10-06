@@ -209,7 +209,7 @@ final class Session
     }
 
     /**
-     * @param AttributeCollection
+     * @param AttributeCollection $variables
      *
      * @return Session
      */
